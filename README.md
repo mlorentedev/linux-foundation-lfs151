@@ -383,3 +383,439 @@ Factoring in all the possible combinations of compute and storage hardware in Vu
 - Bare Metal physical instances satisfying challenging single-tenant requirements of most demanding businesses.
 
 ## 3 - Platform as a Service (PaaS)
+
+Platform as a Service (PaaS) is a cloud service model representing a class of cloud computing services that allow users to develop, run, and manage applications while concealing the tasks involved in the management of the underlying infrastructure. With PaaS, users are able to concentrate their efforts on building their applications, which is a great benefit to developers.
+
+Users have a choice between managed and self-managed PaaS solutions. Managed PaaS solutions are hosted by cloud computing providers like Amazon AWS, Microsoft Azure, Google Cloud Platform (GCP), IBM Cloud, and Oracle Cloud, while an on-premises PaaS can be deployed as a self-managed solution, using a platform such as Red Hat OpenShift. Such a Platform benefits the end user by abstracting infrastructure provisioning and application runtime dependencies installation, configuration, and maintenance.
+
+PaaS can be deployed on top of IaaS or independently on VMs, bare-metal servers, and containers.
+
+Third party certified PaaS solutions are becoming increasingly popular as well. These certified solution providers are software vendors who bundle highly desired software platforms with IaaS offerings of cloud infrastructure providers to present a PaaS to their respective clients. Such certified platform solutions are achieved through extensive customization, and the final bundled solutions are presented as distributions of the original highly desired software.
+
+### Cloud Foundry
+
+Cloud Foundry (CF) is an open source Platform as a Service (PaaS) framework aimed at developers in large organizations, that is portable to any cloud, highly interoperable, has an architecture supporting any programming language, and integrates easily with various cloud and on-premises tools. In addition to supporting any type of application, it provides means for these applications to access external resources through application services gateway.
+
+While CF can be deployed on-premises, it is recommended to install it on one of the supported IaaS, such as Amazon AWS, Microsoft Azure, Google Cloud Platform (GCP), IBM Cloud, OpenStack, or VMware vSphere. Stable Cloud Foundry releases are also available through several certified commercial distributions as well, such as Atos Cloud Foundry, Cloud.gov, SAP Cloud Platform, VMware Tanzu (formerly known as Pivotal Cloud Foundry), or others.
+
+CF aims to address challenges faced by developers in large organizations through a collection of customized technologies. Popular core components such as the Cloud Foundry API, CF CLI, Korifi, Garden, Diego, Eirini, Paketo Buildpacks, Stratos UI, together with BOSH, Quarks, and a set of extensions such as the Open Service Broker API make up the Cloud Foundry platform.
+
+#### Cloud Foundry BOSH
+
+Cloud Foundry BOSH is an open source tool for release engineering, deployment, lifecycle management, and monitoring of complex distributed systems, enabling developers to easily version, package and deploy software in a reproducible manner.
+
+BOSH aims to ease the process of building and administering consistently similar environments from development to staging and production. BOSH was designed to be the one tool to solve versioning, packaging, and reproducible software deployments as a whole, a collection of activities otherwise performed by tools such as Chef, Puppet, and Docker in various non-standard approaches.
+
+BOSH follows the four principles of release management:
+
+- identifiability of all components making up a release,
+- reproducibility of integration that guarantees operational stability,
+- consistency through a stable framework for development, deployment, audit and software components accountability, and
+- agility for software release automation according to software engineering best practices for Continuous Integration and Continuous Delivery.
+
+BOSH can be installed on-premises on supported OSes such as several Linux distributions, macOS, and Windows. A popular on-premises hypervisor, VirtualBox is also supported. BOSH can be installed on supported IaaS providers as well, such as AWS, Microsoft Azure, GCP, IBM Cloud, OpenStack, VMware.
+
+A powerful feature of the Cloud Foundry platform is its command line interface (CLI) that allows users to interact with various components of the platform to manage infrastructure and application deployments.
+
+Applications can be pushed to Cloud Foundry through the `cf push` command, one of the many commands part of the cf CLI. This command is highly customizable, however, it can be easily run with default settings even by novice users of the Cloud Foundry platform. It supports popular programming languages such as Java, Node.js, Python, PHP, Go, Ruby, and .Net, but it can be extended to support additional languages and developer frameworks through community-developed buildpacks.
+
+#### Korifi
+
+Current trends require applications to become lighter, faster, easier to share, secure, maintain, and manage. And most often these applications are designed to run in the cloud, whether on-premises, public, or hybrid, named cloud native applications. These application characteristics also reshape the application build models and tools that need to become cloud native themselves. While containers and container orchestration concepts and tools will be discussed in later chapters, complex platforms such as Cloud Foundry can become cloud native as well. Converting CF into a cloud native tool is not an effortless process, however, the result is a CF project named Korifi. It is a CF offering redesigned from the ground up for another platform, Kubernetes, a popular container orchestrator.
+
+The Korifi project aims to abstract CF components and dependency configuration, enabling the developer to focus on building applications. This further helps to widen the environment options where CF can be deployed, as containers and container orchestrators are platforms supported by a large array of cloud services, IaaS, and certified solution providers.
+
+### Red Hat OpenShift
+
+Red Hat OpenShift is an open source PaaS solution provided by Red Hat. It is built on top of the container technology orchestrated by Kubernetes. OpenShift can be deployed in the cloud as a managed service or as a self-managed deployment on a public or private cloud optimized to run containers and Kubernetes.
+
+Red Hat offers several products under OpenShift, categorized by their deployment models.
+
+- Red Hat OpenShift - Managed  
+    Hosted OpenShift deployments on public cloud platforms managed by Red Hat. This model includes the Red Hat OpenShift Service on AWS, Red Hat OpenShift on IBM Cloud, and Microsoft Azure Red Hat OpenShift.
+- Red Hat OpenShift Platform Plus - Self-Managed  
+    Create your own private, secure Kubernetes multi-cluster PaaS.
+- Red Hat OpenShift Container Platform  
+    Create your own self-managed consistent hybrid cloud PaaS to build and scale containerized applications.
+- Red Hat OpenShift Kubernetes Engine - Self-Managed  
+    An entry-level solution promoting the advantages of OpenShift over other Kubernetes solutions, supported by Red Hat.
+
+Red Hat OpenShift allows developers to easily and quickly deploy containerized applications through application images and application templates enabled for one-click application deployments.
+
+Thanks to Kubernetes, Red Hat OpenShift receives all the features offered by the container orchestration platform, such as adding or removing nodes at runtime, persistent storage, and auto-scaling.
+
+Red Hat OpenShift integrates well with Continuous Deployment tools to deploy applications as part of the CI/CD pipeline.
+
+Applications are managed with ease through command line (CLI) tools, web user interface (UI), and integrated development environment (IDE) available for Red Hat OpenShift.
+
+### Heroku
+
+Heroku Platform
+Heroku is a fully-managed container-based cloud platform with integrated data services and a strong ecosystem. Heroku is used to deploy and run enterprise level modern applications, and it is a Salesforce company.
+
+Heroku offers multiple products; however, its core remains the Heroku Platform, a PaaS solution used to deploy large scale applications. The Heroku Platform supports the following popular languages and frameworks: Ruby, Java, Node.js, Python, PHP, Go, Scala, and Clojure.
+
+Heroku sets itself apart from other PaaS offerings by introducing a unique workflow for users to follow, hence a strict Heroku-centric development and deployment workflow needs to be followed once the decision has been made to use Heroku. However, the workflow aims to be developer-friendly. Below are several core concepts of the workflow:
+
+- Applications should contain the source code, its dependency information and the list of named commands to be executed when deployed, in a file called Procfile.
+- For each supported language, it has a pre-built image which contains a compiler for that language. This pre-built image is referred to as a buildpack. Multiple buildpacks can be used together. We can also create a custom buildpack.
+- While deploying, we need to send the application's content to Heroku, either via Git, GitHub, or via an API. Once the application is received by Heroku, a buildpack is selected based on the language of preference.
+- To create the runtime which is ready for execution, we compile the application after fetching its dependency and configuration variables on the selected buildpack. This runtime is often referred to as a slug.
+- We can also use third-party add-ons to enable access to value-added services like logging, caching, monitoring, etc.
+- A combination of slug, configuration variables, and add-ons is referred to as a release, on which we can perform upgrade or rollback.
+- Depending on the process-type declaration in the Procfile, a virtualized UNIX container is created to serve the process in an isolated environment, which can be scaled up or down, based on the requirements. Each virtualized UNIX container is referred to as a dyno. Each dyno gets its own ephemeral storage.
+- Dyno Manager manages dynos across all applications running on Heroku.
+
+The Heroku Platform allows users to deploy, run, and manage applications written in multiple programming languages or frameworks, from source code that may also include dependencies.
+
+By encapsulating the application in a dyno, which is a lightweight and secure container, the application can be scaled based on demand.
+
+Application configuration can be decoupled from the application source code, allowing for application customization based on the environment where the application is deployed. Configuration customization is achieved through config vars, which combined with the application slug, produce a release.
+
+It is a very rich ecosystem, and it allows us to extend the functionality of an application with add-ons available in the Elements Marketplace. Add-ons allow us to easily integrate our applications with other fully-managed cloud services such as storage, database, monitoring, logging, pipelines, email, message queue, security, and networking.
+
+Applications deployed on the Heroku Platform can be easily integrated with Salesforce.
+
+## 4 - Containers
+
+Typically, a developer's end goal to run an application is not too difficult to achieve. However, challenges are encountered with portability, when the application needs to work consistently on multiple hardware and platforms, such as the developer's laptop, VMs, data centers, public and private clouds, basically, from the development environment all the way to production.
+
+![Running an application](images/running-an-application.png)
+
+Developers prefer not to trouble themselves with the portability and consistency aspects of applications and expect the application to just work, regardless of the underlying platform. By using a container technology such as Docker or Podman, the application and all its dependencies can be bundled in a box.
+
+![Docker container](images/docker-container.jpeg)
+
+The box can be shipped to different platforms and it will run identically on each one of them. Key benefits of using containers are:
+
+- They have a very light footprint.
+- They can be deployed very fast (within milliseconds).
+- They are a flexible solution, as they can run on any computer, infrastructure, or cloud environment.
+- They can be scaled up or down with ease.
+- There is a very rich ecosystem built around them.
+- Problem containers can be easily and quickly isolated when troubleshooting and solving problems.
+- Containers use less memory and CPU than VMs running similar workloads.
+- Increased productivity with reduced overhead.
+- They offer portability and consistency.
+
+### Images and containers
+
+In the container world, this box containing our application source code and all its dependencies and libraries is referred to as an image. A running instance of this box is referred to as a container. We can run multiple containers from the same image.
+
+An image contains the application, its dependencies, and the user-space libraries. User-space libraries like `glibc` enable switching from the user-space to the kernel-space. An image does not contain any kernel-space components.
+
+When a container is created from an image, it runs as a process on the host's kernel. It is the host kernel's job to isolate the container process and to provide resources to each container.
+
+We will now take a look at some of the building blocks of the container technology, provided by the Linux kernel.
+
+#### Namespaces
+
+A namespace wraps a particular global system resource like network and process IDs in an abstraction, that makes it appear to the processes within the namespace that they have their own isolated instance of the global resource. The following global resources are namespaced:
+
+- pid - provides each namespace to have the same PIDs. Each container has its own PID 1.
+- net - allows each namespace to have its network stack. Each container has its own IP address.
+- mnt - allows each namespace to have its own view of the filesystem hierarchy.
+- ipc - allows each namespace to have its own interprocess communication.
+- uts - allows each namespace to have its own hostname and domain name.
+- user - allows each namespace to have its own user and group ID number spaces. A root user inside a container is not the root user of the host on which the container is running.
+
+#### cgroups
+
+Control groups are used to organize processes hierarchically and distribute system resources along the hierarchy in a controlled and configurable manner. The following cgroups are available for Linux:
+
+- blkio
+- cpu
+- cpuacct
+- cpuset
+- devices
+- freezer
+- memory
+
+#### Union filesystem
+
+The Union filesystem allows files and directories of separate filesystems, known as layers, to be transparently overlaid on top of each other, to create a new virtual filesystem. At runtime, a container is made of multiple layers merged to create a read-only filesystem. On top of a read-only filesystem, a container gets a read-write layer, which is an ephemeral layer and it is local to the container.
+
+### Container runtimes
+
+Namespaces and cgroups have existed in the Linux kernel for quite some time, but consuming them to create containers was not easy. Although the first steps towards containerization can be traced back to 1979 with the process isolation achieved through chroot, followed by Linux Containers (LXC) released in 2008, it was the launch of Docker in 2013 that allowed containers to become more popular. Docker was able to hide all the complexities in the background and came up with a simple workflow to share and manage both images and containers. Docker achieved this level of simplicity through a collection of tools that interact with a container runtime on behalf of the user. The container runtime ensures the containers' portability, offering a consistent environment for containers to run, regardless of the infrastructure.
+
+Once containers have become popular and container orchestration was emerging as a concept with Kubernetes becoming its primary implementation, in 2014 we saw a new container runtime being born - rkt, implementing a newly introduced set of standards, the App Container (appc) specification defining the Application Container Image (ACI) format. Shortly after, a new standard has been introduced in 2015, the Open Container Initiative (OCI), setting the stage for several new projects such as Skopeo, Buildah, and Podman, all providing sets of open source tools to allow users a quicker, more secure, daemonless, and less resource-intensive containerization experience. Kaniko has also been introduced, a project aiming to integrate the Dockerfile-based container image build process with Kubernetes, or any other environment that cannot run a Docker daemon. While the containers landscape was evolving, a new container runtime has been introduced, CRI-O - a lightweight runtime implementing Kubernetes' Container Runtime Interface (CRI) standard to allow OCI-compliant containers to be run and managed by the container orchestrator.
+
+#### runC
+
+Over the past few years, we have seen rapid growth in the interest and adoption of container technologies. Most of the cloud providers and IT vendors offer support for containers. To make sure there is no vendor locking and no inclination towards a particular company or project, IT companies came together and formed an open governance structure, called The Open Container Initiative (OCI), under the auspices of the Linux Foundation. The governance body came up with both runtime and image specifications to create standards on the Operating System process and application containers. runC is the CLI tool for spawning and running containers according to these specifications, also categorized as a low-level runtime. runc is a Go language-based tool that creates and starts container processes. An OCI container runtime is expected to fork off the first process in the container, but Go does not have good support for the fork/exec model of computing. Go follows a threading model that expects programs to fork a second process and then to exec immediately.
+
+#### crun
+
+crun is a much faster and low-memory footprint OCI-conformant runtime written in C. crun is lighter than runc because its C source code allows its compiled size to be 50x smaller and to run about 2x faster. C is not multi-threaded, but it follows the fork/exec model, meeting the OCI runtime expectation.
+
+#### containerd
+
+containerd is an OCI-compliant container runtime with an emphasis on simplicity, robustness, and portability. As a high-level runtime, it runs as a daemon and manages the entire lifecycle of containers. It is available on Linux and Windows operating systems. Docker, also run as a daemon, is a containerization platform that uses containerd as a runtime to manage runC containers.
+
+#### CRI-O
+
+CRI-O is an OCI-compatible runtime, which is an implementation of the Kubernetes Container Runtime Interface (CRI). It is a lightweight high-level alternative to using Docker as the runtime for Kubernetes.
+
+### Containers vs VMs
+
+A virtual machine is provisioned with the help of a hypervisor, the software layer that virtualizes a host system's hardware resources such as CPU, memory, and networking to allow a guest OS to be installed and take advantage of them. Various guest OSes can be installed on top of a hypervisor. However, between an application running inside a guest OS and in the outside world, there are multiple layers: the guest OS, the hypervisor, and at times the host OS.
+
+![Containers vs VMs](images/docker-containers-vs-vms.png)
+
+In contrast to VMs, containers run directly as processes on the host OS. There is no middle layer as we see in VMs, which helps containers to achieve near-native performance. Also, as the containers have a very light footprint, it becomes easier to pack a higher number of containers than VMs on the same physical machine. However, as containers run on the host OS, we need to make sure containers are compatible with the host OS.
+
+### Docker
+
+Docker, Inc. is a company that provides the Docker Platform to run applications using containers. The Docker Platform is a collection of development tools that follow a client-server architecture, with a Docker Client connecting to a Docker Host server that runs the Docker daemon to execute commands for containers and images management in response to client requests. Docker also offers a GUI that allows developers to interact with images and containers in a visual fashion - the Docker Desktop for Linux, macOS, and Windows.
+
+Docker is capable of running rooted containers by default. However, as a result of security and vulnerability concerns voiced by its users, Docker has introduced the rootless containers mode as well, aiming to address issues such as privilege escalation. The container image build process is predominantly driven by the popular Dockerfile.
+
+While not an exhaustive list, the basic Docker CLI operations are enumerated below:
+
+- List images available in the local cache: `$ docker image ls`
+- Pulling an alpine image from the registry into the local cache: `$ docker image pull alpine`
+- Run a container from an image (if the image is not found in the local cache, it will be pulled from the registry): `$ docker container run -it alpine sh`
+- Run a container in the background (-d option) from an nginx image: `$ docker container run -d nginx`
+- List only running containers: `$ docker container ls`
+- List all containers: `$ docker container ls -a`
+- Inject a process inside a running container. This will start a bash shell in interactive (-i option) terminal (-t option) mode inside the container: `$ docker container exec -it <container_id/name> bash`
+- Stop a running container: `$ docker container stop <container id/name>`
+- Delete a stopped container: `$ docker container rm <container id/name>`
+
+### Podman
+
+Podman, or Pod Manager, is an open source, daemonless tool designed to simplify the searching, running, building, sharing, and deploying of applications using Open Containers Initiative (OCI) containers and container images. Podman provides a command line interface (CLI) that is very similar to the Docker CLI. It comes with a GUI that allows developers to interact with images and containers in a visual fashion - the Podman Desktop for Linux, macOS, and Windows. Podman also relies on an OCI-compliant Container Runtime such as runc to create the running containers, making it a great alternative containerization tool to Docker. Another Podman advantage is its capability to run containers in rootless mode by default, while rooted mode is also supported if desired. Docker on the other hand only recently has introduced rootless mode, while rooted container mode has been its default mode. Podman's image building process may use a Containerfile, similar in format to the popular Dockerfile.
+
+Red Hat, the developers of Podman, created two additional open source tools designed to operate within the container images landscape. Buildah supports container image builds one step at a time by taking an interactive approach to processing Dockerfile instructions, while Skopeo is a tool designed to work with container images in both local and remote repositories.
+
+![Podman](images/docker-podman-buildah-skopeo.png)
+
+The side by side comparison highlights the essential difference between Docker and Podman - that the Docker CLI interacts with the Docker daemon prior to invoking the containerd daemon responsible to run the runc runtime, while Podman is a daemonless tool capable of running the runc runtime without an intermediary daemon such as containerd.
+
+As a result of the CLI similarities, to preserve the developers experience when transitioning from Docker to Podman, simply set the following alias docker=podman. While not an exhaustive list, the basic Podman CLI operations are enumerated below:
+
+- List images available in the local cache: `$ podman image ls`
+- Pulling an alpine image from the registry into the local cache: `$ podman image pull alpine`
+- Run a container from an image (if the image is not found in the local cache, it will be pulled from the registry): `$ podman container run -it alpine sh`
+- Run a container in the background (-d option) from an nginx image: `$ podman container run -d nginx`
+- List only running containers: `$ podman container ls`
+- List all containers: `$ podman container ls -a`
+- Inject a process inside a running container. This will start a bash shell in interactive (-i option) terminal (-t option) mode inside the container: `$ podman container exec -it <container_id/name> bash`
+- Stop a running container: `$ podman container stop <container id/name>`
+- Delete a stopped container: `$ podman container rm <container id/name>`
+
+### Additional CLI tools
+
+The popularity of both Docker and Podman has a lot to do with the capabilities of their embedded CLI clients. Users have the client available at all times, being part of the installation packages. They can immediately operate on the container runtime, container images, and running containers, be it configuration, development, testing, or troubleshooting operations. Both Docker and Podman CLI clients support an extensive set of commands.
+
+The containerd runtime came paired with the ctr client, which was no match for Docker and Podman clients. While the ctr project is no longer maintained, a newer client, nerdctl, advertised as a Docker-compatible client for containerd aims to make containerd more user friendly. Eventually, another client, crictl, was created to support CRI-O. However, crictl can be configured for containerd and Docker as well.
+
+### Project Moby
+
+As we know, a container platform like Docker runs on different platforms and architectures: bare metal (both x86 and ARM), Linux, macOS, and Windows. We can also find pre-configured VM images to run Docker on popular cloud and virtualization providers.
+
+From the user perspective, the experience is seamless, regardless of the underlying platform. However, behind the scenes, components such as the container runtime, networking, and storage are connected to ensure this high-quality experience. Open source projects like containerd and libnetwork are part of the container platform and have their own release cycles and governing models. The question is, however, how can we take those individual components and build a container platform like Docker?
+
+Project Moby is the answer. It is an open source project that provides a framework for assembling different container systems to build a container platform like Docker. Individual container systems provide features such as image, container, and secret management.
+
+![Project Moby](images/project-moby.png)
+
+Moby is particularly useful for engineers who want to build their container-based system, to customize and patch an existing Docker build, or just to experiment with the latest container technologies. It uses a Lego-like approach to assemble various open source toolkits.
+
+## 5 - MicroOperating Systems for Containers
+
+The current technological trend is to run applications in containers, aiming for light weight isolated environments for applications. In this context, it makes a lot of sense to eliminate all the packages and services of the host Operating System (OS), which are not essential for running containers. With that in mind, various vendors have come forward with specialized minimal OSes to run just containers.
+
+Once we remove the packages that are not essential to boot the base OS and run container-related services, we are left with specialized OSes, which are referred to as Micro OSes for containers. However, such specialized OSes may also be used as container OSes as they allow for fast container startups and provide a lightweight container environment that is secure and easy to customize.
+
+![Micro OSes for containers](images/micro-oses-for-containers.png)
+
+### Alpine Linux
+
+Alpine Linux is an independent, non-commercial, Linux distribution designed for security, simplicity and resource efficiency. Built on top of the capabilities of BusyBox, Alpine Linux combines the security features of a Linux-based Operating System with a collection of small footprint, yet fully functional utilities.
+
+Although small between 5 MB and 8 MB per container, or 130 MB as a minimal standalone OS install, it is more resource-efficient than typical distributions. Users can control what binary packages to install, thus ensuring a small yet efficient system.
+
+Alpine Linux uses its own package manager called apk, the OpenRC init system, and set-up scripts. Users can add packages as needed such as PVR, iSCSI storage controllers, a mail server container, or an embedded switch.
+
+Alpine Linux was designed with security in mind, with embedded proactive security features that prevent the exploitation of entire classes of zero-day and other vulnerabilities.
+
+Upon installation completion, Alpine Linux makes available tools for the initial configuration of the system. Once prepared for reboot, it can be configured to boot in one of the three available runtime modes:
+
+- diskless mode  
+    The default mode, where the entire system runs from RAM.
+- data mode  
+    Mostly runs from RAM, but mounts /var as a writable data partition.
+- sys mode  
+    The typical hard disk install that mounts /boot, swap and /.
+
+Key benefits of using Alpine Linux are:
+
+- It is a minimal OS designed to run containerized applications as well.
+- It is designed for security, simplicity, and resource efficiency.
+- It requires between 5 MB and 8 MB as a container.
+- It requires 130 MB as a standalone minimal OS installation.
+- It provides increased security by compiling user binaries as Position Independent Executables (PIE) with stack smashing protection.
+- It can be installed as a container, on bare metal, as well as VMs.
+- It offers flavors optimized to support Xen and Raspberry Pi.
+
+### Busybox
+
+BusyBox, the Swiss Army Knife of Embedded Linux, combines very small versions of several popular UNIX utilities into a single compact executable. While these utilities incorporate fewer options, they still support the expected functionality and behavior. Written with size-optimization and limited resources in mind, with a container image between 1 MB to 5 MB, BusyBox is able to pack a complete environment making it an ideal fit for small or embedded systems. In addition, its modular nature makes it very easy to customize. 
+
+Although not an Operating System in itself, BusyBox was designed to run on Linux and to enhance a lightweight OS with tools needed to help developers troubleshoot and debug their containerized applications. BusyBox is licensed under the GNU General Public License, version 2 (GPLv2).
+
+- It is an open source package of tools specifically designed to run in small, containerized, or embedded systems.
+- It is designed for simplicity and resource efficiency.
+- It is modular and highly customizable.
+- It requires between 1 MB to 5 MB as a container.
+- While its code is Linux-specific, it can be easily ported to FreeBSD, Solaris, and macOS.
+- It is available in Fedora, CentOS, and Red Hat Enterprise Linux editions.
+- Can be built on various architectures: ARM, CRIS, H8/300, x86, ia64, x86_64, m68k, MIPS, PowerPC, S390, SH3/4/5, Sparc, v850e, and x86_64.
+- Can be found running in products by Cisco, ASUS, Synology, Western Digital, Sharp, Linksys, Dell, NetGear, Belkin, Siemens, Trendnet, and others.
+
+### Fedora CoreOS
+
+Fedora CoreOS (FCOS) is an open source project partnered with the Fedora Project. It was formerly known as Red Hat CoreOS and CoreOS Container Linux prior to that. It combines the best of both CoreOS Container Linux and Fedora Atomic Host (FAH) while aiming to provide the best container host to run containerized workloads securely and at scale.
+
+Fedora CoreOS is a minimal operating system for running containerized workloads, that updates automatically and is available on multiple platforms. Although a container-focused operating system, by design, CoreOS is operable in both clusters and standalone instances. In addition, it is optimized to work with Kubernetes, but it also works very well without the containerized workload orchestrator.
+
+- It is an OS designed to run containerized applications, in both clustered environments or as stand-alone.
+- It enables us to perform quick updates and rollbacks.
+- It provides increased security through SELinux.
+- It can be installed on bare metal, virtual environments, and the cloud.
+- It combines features of both Fedora Atomic Host and CoreOS Container Linux.
+- It works well with Kubernetes.
+- It uses Ignition as a provisioning tool for early boot disk partitioning, formatting, and other administrative configuration tasks.
+
+Fedora CoreOS (FCOS) combines features of both CoreOS Container Linux and Fedora Atomic Host (FAH). In order to provide a robust container host to run containerized workloads securely and at scale, it integrates several components.
+
+- Ignition from CoreOS Container Linux  
+    A provisioning utility designed specifically for CoreOS Container Linux, which allows users to manipulate disks during early boot, such as partitioning disks, formatting partitions, writing files, and configuring users. Ignition runs early in the boot process (in the initramfs) and runs its configuration before the userspace boot, which provides advanced features to administrators.
+- rpm-ostree from FAH  
+    One cannot manage individual packages on Atomic Host, as there is no rpm or other related commands. To get any required service, you would have to start a respective container. Atomic Host has two bootable, immutable, and versioned filesystems; one is used to boot the system and the other is used to fetch updates from upstream. rpm-ostree is the tool to manage these two versioned filesystems.
+- SELinux hardening from FAH  
+    Containers secured with SELinux provide close-to-VM isolation, security, increased flexibility, and efficiency.
+
+FCOS offers multiple installation methods:
+
+- Cloud launchable: To launch directly on Amazon's AWS platform.
+- Bare metal and virtualized: For bare-metal installs from ISO, PXE (Preboot Execution Environment) or Raw, and virtual installs on OpenStack, QEMU, Raspberry Pi 4, VirtualBox, or VMware.
+- For cloud operators: Optimized for the following cloud services providers: Alibaba Cloud, AWS, Azure, DigitalOcean, Exoscale, GCP, IBM Cloud, OpenStack, and Vultr.
+
+### Flatcar Container Linux
+
+Flatcar Container Linux is a container-optimized OS, with a minimal image size including only the tools needed to run containers. Its name, "Flatcar", represents a flat and open railcar that is used in containers transportation. Flatcar's greatest strengths are its immutable filesystem and automated atomic updates. 
+
+Flatcar Container Linux is a drop-in replacement for Red Hat CoreOS Container Linux, being directly derived from CoreOS and enabling a seamless in-place migration. Users of CoreOS can effortlessly migrate to Flatcar Container Linux either by modifying a deployment to install Flatcar Container Linux, or by updating directly from Red Hat CoreOS Container Linux.
+
+Flatcar Container Linux became increasingly popular once Red Hat announced the end-of-life of the CoreOS Container Linux.
+
+- It is a container-optimized Linux OS distribution.
+- An immutable/read-only filesystem makes it less vulnerable.
+- A minimal OS implies a minimized attack surface.
+- It receives automated security updates and patches.
+- As a CoreOS successor, it supports two easy migration methods from Red Hat CoreOS Container Linux to Flatcar Container Linux.
+- It runs on bare-metal and virtualization platforms such as QEMU, libVirt, VirtualBox, and Vagrant.
+- It runs on public clouds such as Amazon EC2, GCE, Azure, Equinix, VMware, and DigitalOcean.
+- Its first time boot is supported by the Ignition provisioning utility.
+- Supports containerd and Docker container runtimes for Kubernetes clusters.
+
+### k3OS
+
+k3OS (the Kubernetes Operating System) is a Linux distribution that aims to minimize the OS maintenance tasks in a Kubernetes cluster. It was designed to work with Rancher's K3s lightweight Kubernetes distribution. k3OS installs fast, boots fast, requires no package manager, and is managed through Kubernetes, being optimized to run in a low-resource computing environment by running only necessary services.
+
+k3OS speeds up the K3s cluster boot time. At boot time, the k3OS image becomes available to K3s and the cluster takes full control over all the nodes' maintenance, eliminating the need to log in to each individual node for upgrades or other maintenance activities.
+
+![k3OS](images/k3os-architecture.png)
+
+- It is a minimalist OS that eliminates unnecessary libraries and services.
+- It decreases complexity and boot time.
+- It is highly secure due to a small code base and a decreased attack surface.
+- It was designed to integrate with Rancher's K3s Kubernetes distribution.
+- Updates and other OS maintenance tasks are performed directly from within the K3s Kubernetes cluster.
+- OS configuration is simplified though cloud-init.
+
+### Ubuntu Core
+
+Ubuntu Core is a lightweight version of Ubuntu, predominantly designed for IoT embedded devices, but also found in large container deployments. In comparison with other container OSes, its size of around 260MB places Ubuntu Core behind much lighter container OSes, such as Alpine Linux, but ahead of much larger OSes like CoreOS, sized around 800MB. Similar to Ubuntu Server and Ubuntu Desktop, Ubuntu Core works with software packages called snaps.
+
+Security is a top concern for the designers of Ubuntu Core, implemented by features such as:
+
+- Hardened security with immutable packages and persistent digital signatures.
+- Strict application isolation.
+- Reduced attack surface by keeping a small OS, stripped down to bare essentials.
+- Automatic vulnerability scanning of packages.
+
+In addition, Ubuntu Core was designed with extreme reliability, implemented by:
+
+- Transactional updates that increase OS and data resiliency by allowing automated rollbacks when errors are encountered.
+- Automated restore points to allow returns to the last working boot in the case of an unsuccessful kernel update.
+- Consistent application data snapshots.
+
+Ubuntu Core was built for the enterprise by including secure app store management and license compliance. Developers using Core as their platform enjoy cross-platform portability of snaps from Desktop and Server to Core, together with CI/CD pipeline support.
+
+Ubuntu Core is designed to run on bare-metal, on hypervisors such as KVM, or a wide range of hardware, including Raspberry Pi and Qualcomm Snapdragon 410c. Its top features are:
+
+- Immutable image for simple and consistent installation and deployment.
+- Isolated applications run with explicit permissions, such as read-only access to the filesystem.
+- Transactional updates for signed, autonomous, atomic, and flexible updates.
+- Security implemented at snap level, from build and distribution to deployment.
+
+Application security and isolation is implemented through:
+
+- AppArmor
+- Seccomp.
+
+Snaps are secure, isolated, dependency-free, portable, software packages for Linux. They even include their own filesystems. Snaps benefits include:
+
+- Automatic updates.
+- Automated recovery in the case of failed updates.
+- Critical update provision for unscheduled updates.
+- Flexible hardware and network conditions support for unpredictable systems, including redundancy for roll-backs, and autonomous bootstrapping.
+
+The snap packaging environment includes the following:
+
+- snap  
+    The application package format and the command line interface (CLI).
+- snapd  
+    The background service managing and maintaining snaps.
+- snapcraft  
+    The framework including the command to build custom snaps.
+- Snap Store  
+    The repository to store and share snaps.
+
+There are several types of snap included in Ubuntu Core:
+
+- kernel - defines the Linux kernel
+- gadget - defines specific system properties
+- core - the execution environment for application snaps
+- app - including applications, daemons such as snapd, and various tools.
+
+### VMware Photon OS
+
+Photon OS™ is a minimal Linux container host provided by VMware, optimized for cloud-native applications. It is designed with a small footprint in order to boot extremely quickly on VMware vSphere deployments and on cloud computing platforms. Photon OS can be deployed on Amazon EC2, GCE, and Microsoft Azure instances, while supporting a variety of container formats as a container host or as a Kubernetes node.
+
+Photon OS is available in two versions, a minimal and a full version:
+
+- The minimal version is a lightweight container host runtime environment including a minimum of packaging and functionality to manage containers while still remaining a fast runtime environment.
+- The full version also includes packages of tools for the development, testing, and deployment of containerized applications.
+
+Photon OS™ is optimized for VMware products and cloud platforms. It relies on an open source, yum-compatible package manager called Tiny DNF (tdnf), and it manages services with systemd.
+
+Photon OS™ is a security-hardened Linux. The kernel and other aspects of the Photon OS™ are built with an emphasis on security recommendations provided by the Kernel Self-Protection Project (KSPP).
+
+It can be easily managed, patched, and updated. It also provides support for persistent volumes to store the data of cloud-native applications on VMware vSAN™.
+
+Although promoted as an enterprise grade appliance operating system, Photon OS can be installed on Raspberry Pi, ARM64, and x86 as well.
+
+- It is an open source technology with a small footprint.
+- It supports various container runtimes as a standalone container host, or as a Kubernetes cluster node.
+- We can use Kubernetes in the full version, to allow for container cluster management, but it also supports Apache Mesos.
+- It boots extremely quickly on VMware platforms.
+- It provides an efficient lifecycle management with a yum-compatible package manager.
+- Its kernel is tuned for higher performance when it is running on VMware platforms.
+- It is a security-enhanced Linux as its kernel and other aspects of the operating system are configured according to the security parameter recommendations given by the Kernel Self-Protection Project.
+
+## 6 - Container Orchestration
