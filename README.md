@@ -819,3 +819,554 @@ Although promoted as an enterprise grade appliance operating system, Photon OS c
 - It is a security-enhanced Linux as its kernel and other aspects of the operating system are configured according to the security parameter recommendations given by the Kernel Self-Protection Project.
 
 ## 6 - Container Orchestration
+
+Running containers on a single container host may no longer satisfy the needs of today's enterprise, where, especially in production, containerized workload needs to be managed at scale for high availability and fault tolerance. That is how we benefit the most from containers. The solution is to run containers in a multi-host environment at scale, which introduces a new set of concerns that need to be addressed, summarized below:
+
+- How to group multiple hosts together to form a cluster, and manage them as a single compute unit?
+- How to schedule containers to run on specific hosts?
+- How can containers running on one host communicate with containers running on other hosts?
+- How to provide the container with dependent storage, when it is scheduled on a specific host?
+- How to access containers over a service name, instead of accessing them directly through their IP addresses?
+
+Container orchestration tools, together with different plugins (for networking and storage), aim to address these concerns.
+
+Container orchestration is an umbrella concept that encompasses container scheduling and cluster management. Container scheduling becomes a policy-driven mechanism that automates the decision process that distributes containers across the nodes of the cluster. However, cluster operators are allowed to control the scheduling process through custom policies or scheduling properties. The decision making process during scheduling is aided by cluster management aspects such as the state of existing workloads and cluster node resources availability. With cluster management orchestrators, we can manage the resources of cluster nodes, as well as add or delete nodes from the cluster through the cluster scaling mechanism.
+
+### Kubernetes
+
+Kubernetes is an Apache 2.0-licensed open source project for automating deployment, operations, and scaling of containerized applications. It was started by Google in 2014, but many other companies like Docker, Red Hat, and VMware contributed to its success.
+
+In July 2015, Cloud Native Computing Foundation (CNCF), the nonprofit organization dedicated to advancing the development of cloud-native applications and services and driving alignment among container technologies, accepted Kubernetes as its first hosted project. Intellectual Property (IP) was transferred to CNCF from Google.
+
+As the Kubernetes project matures, the list of supported container runtimes may change, however, currently containerd, CRI-O, Docker Engine, and Mirantis Container Runtime are supported to run containers.
+
+![Kubernetes](images/components-of-kubernetes.png)
+
+Next, we will discuss the key components and API resources of the Kubernetes architecture.
+
+#### Key components
+
+##### Cluster
+
+The cluster is a collection of systems (bare-metal or virtual) and other infrastructure resources used by Kubernetes to run containerized applications.
+
+##### Control-plane node
+
+The control-plane node is a system that takes containerized workload scheduling decisions, manages the worker nodes, enforces access control policies, and reconciles changes in the state of the cluster. Its main components are the kube-apiserver, etcd, kube-scheduler, and kube-controller-manager responsible for coordinating tasks around container workload scheduling, deployment, scaling, self-healing, state persistence, state reconciliation, and delegation of container management tasks to worker node agents. Multiple control-plane nodes may be found in clusters as a solution for High Availability.
+
+##### Worker Node
+
+A system where containers are scheduled to run in workload management units called Pods. The node runs a daemon called kubelet responsible for intercepting container deployment and lifecycle management related instructions from the kube-apiserver, delegating such tasks to the container runtime found on the node, implementing container health checks, enforcing resource utilization limits, and reporting node status information back to the kube-apiserver. kube-proxy, a network proxy, enables applications running in the cluster to be accessible by external requests. Both node agents - kubelet and kube-proxy, together with a container runtime are found on worker nodes and on control-plane nodes as well.
+
+##### Namespace
+
+The namespace allows us to logically partition the cluster into virtual sub-clusters by segregating the cluster's resources, addressing the multi-tenancy requirements of enterprises requiring ab isolation method for their projects, applications, users, and teams.
+
+#### Key API resources
+
+##### Pod
+
+The pod is a logical workload management unit, enabling the co-location of a group of containers with shared dependencies such as storage Volumes. However, a pod is often managing a single container and its dependencies such as Secrets or ConfigMaps. The pod is the smallest deployment unit in Kubernetes. A pod can be created independently, but it is lacking the self-healing, scaling, and seamless update capabilities which Kubernetes is know for. In order to overcome the pod's shortcomings, controller programs, or operators, such as the ReplicaSet, Deployment, DaemonSet, or the StatefulSet are recommended to be used to manage pods, even if only a single application pod replica is desired.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    run: nginx-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.17.9
+    ports:
+    - containerPort: 80
+```
+
+##### ReplicaSet
+
+The ReplicaSet is a mid-level controller, or operator, that manages the lifecycle of pods. It rolls out a desired amount of pod replicas, uses state reconciliation to ensures that the desired number of application pod replicas is running at all times, and to self-heal the application if a pod replica is unexpectedly lost due to a crash or lack of computing resources.
+
+##### Deployment
+
+The Deployment is a top-level controller that allows us to provide declarative updates for pods and ReplicaSets. We can define Deployments to create new resources, or replace existing ones with new ones. The Deployment controller, or operator, represents the default stateless application rollout mechanism. Typical Deployment use cases and a sample deployment are provided below:
+
+- Create a Deployment to roll out a desired amount of pods with a ReplicaSet.
+- Check the status of a Deployment to see if the rollout succeeded or not.
+- Later, update that Deployment to recreate the pods (for example, to use a new image) - through the Rolling Update mechanism.
+- Roll back to an earlier Deployment revision if the current Deployment isn’t stable.
+- Scale, pause and resume a Deployment. Below we provide a sample deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-deployment
+  template:
+    metadata:
+      labels:
+        app: nginx-deployment
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.17.9
+        ports:
+        - containerPort: 8
+```
+
+##### DaemonSet
+
+The DaemonSet is a controller, or operator, that manages the lifecycle of node agent pods. It rolls out a desired amount of pod replicas while ensuring that each cluster node will run exactly one application pod replica. It also uses state reconciliation to ensures that the desired number of application pod replicas is running at all times, and to self-heal the application if a pod replica is unexpectedly lost due to a crash or lack of computing resources.
+
+##### Service
+
+The Service is a traffic routing unit implemented by the kube-proxy providing a load-balancing access interface to a logical grouping of pods, typically managed by the same operator. The Service enables applications with DNS name registration, name resolution to a private/cluster internal static IP. It can reference a single pod or a set of pods managed by ReplicaSets, Deployments, DaemonSets, or StatefulSets.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: nginx-deployment
+    tier: frontend
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 80
+  selector:
+    app: nginx-deployment
+    tier: frontend
+```
+
+##### Label
+
+The Label is an arbitrary key-value pair that is attached to resources like a pod or a ReplicaSet. In the code examples we provided, we defined labels with keys such as `run`, `app`, and `tier`. Labels are typically used to tag resources of a particular application, such as the Pods of a Deployment, to logically group them for management purposes - for updates, scaling, or traffic routing.
+
+##### Selector
+
+Selectors allow controllers, or operators, to search for resources or groups of resources described by a desired set of key-value pair Labels. In the examples provided, the `frontend` Service will only forward traffic to Pods described simultaneously by both labels `app: nginx-deployment` and `tier: frontend`.
+
+##### Volume
+
+The Volume is an abstraction layer implemented through Kubernetes plugins and third-party drivers aimed to provide a simplified and flexible method of container storage management with Kubernetes. Through Kubernetes Volumes, containers are able to mount local host storage, network storage, distributed storage clusters, and even cloud storage services, in a seamless fashion.
+
+Key features of Kubernetes are:
+
+- It automatically distributes containers on cluster nodes based on containers' resource requirements, cluster topology, and other custom constraints.
+- It supports horizontal scaling through the CLI or a UI. In addition, it can auto-scale based on resource utilization.
+- It supports rolling updates and rollbacks.
+- It supports several volume drivers from public cloud providers such as AWS, Azure, GCP, and VMware, together with network and distributed storage plugins like NFS, iSCSI, and the CephFS driver to orchestrate storage volumes for containers running in pods.
+- It automatically self-heals by restarting failed containers, rescheduling containers from failed nodes, and supports custom health checks to ensure containers are continuously ready to serve.
+- It manages sensitive and configuration data for an application without rebuilding the image.
+- It supports batch execution.
+- It supports High Availability of the control-plane node to add control plane resiliency.
+- It eliminates infrastructure lock-in by providing core capabilities for containers without imposing restrictions.
+- It supports application deployments and updates at scale.
+- It supports cluster topology aware routing of traffic to service endpoints.
+
+#### Kubernetes Hosted Solutions and Platforms
+
+Kubernetes, the most popular container orchestrator, can be deployed anywhere, both on-premises or in the public cloud. If we are deploying it on-premises, then our Kubernetes administrators would have to perform all the Kubernetes management tasks to upgrade the cluster or backup resources. For public cloud deployments, we have different options. For instance, we can self-manage our own cluster in the public cloud or opt for hosted (managed) Kubernetes services where all the management tasks would be performed by the cloud services providers. There are several hosted solutions available for Kubernetes, including:
+
+- Amazon Elastic Kubernetes Service (Amazon EKS). Offers a managed Kubernetes service on AWS.
+- Azure Kubernetes Service (AKS). Offers managed Kubernetes clusters on Microsoft Azure.
+- Google Kubernetes Engine (GKE). Offers managed Kubernetes clusters on Google Cloud Platform.
+- IBM Cloud Kubernetes Service. Fully-managed Kubernetes service at scale, providing continuous availability and high availability, multi-zone, and multi-region clusters.
+- NetApp Project Astra (fusion between NetApp and Stackpoint.io). Provides Kubernetes infrastructure automation and management for multiple public clouds optimized for stateful application data lifecycle management.
+- Oracle Container Engine for Kubernetes (OKE). Enterprise-grade Kubernetes service offering highly available clusters optimized to run on Oracle Cloud Infrastructure.
+- Red Hat OpenShift. Offers managed Kubernetes clusters powered by Red Hat on various cloud infrastructures such as AWS, GCP, Microsoft Azure, and IBM Cloud.
+- Vultr Kubernetes Engine (VKE). A managed Kubernetes service integrated with Vultr cloud load balancers and storage services.
+- VMware Tanzu Kubernetes Grid (TKG). An enterprise-grade multi-cloud Kubernetes service that runs both on-premises in vSphere and in the public cloud.
+
+In addition to hosted solutions, the managed Kubernetes Platform solutions have also grown in popularity. With this approach, vendors of Kubernetes services provide a managed Kubernetes environment flexible enough to be deployed on any public cloud, multi-cloud, or on premises/private cloud, eliminating the vendor lock-in which has been troubling many users of the hosted Kubernetes solutions. Several Kubernetes platforms are listed below:
+
+- Managed Kubernetes by Canonical, a Kubernetes as a Service offering with built-in monitoring, analytics, security and compliance, optimized for multi-cloud deployment.
+- D2iQ Enterprise Kubernetes Platform (DKP) is a managed Kubernetes service that incorporates features of DC/OS.
+- Kubermatic Kubernetes Platform automates Kubernetes cluster management on premises and in the public cloud.
+- Mirantis Kubernetes Engine, an Enterprise Kubernetes Platform, formerly Docker Enterprise, manages containerized workloads on any infrastructure.
+- Platform9 Managed Kubernetes (PMK) is a managed SaaS that simplifies Kubernetes management on premises and in the public cloud.
+- Rackspace Managed Platform for Kubernetes (MPK) - Powered by Platform9 Managed Kubernetes (PMK) solution, is a Kubernetes as a Service offering built-in monitoring, alerting, security management, infrastructure as code (IaC) to provision the entire stack. It is a flexible, cross-cloud portable solution.
+- Rancher Kubernetes Engine (RKE) is a Kubernetes distribution that runs in containers on any platform.
+
+#### Amazon Elastic Kubernetes Service (Amazon EKS)
+
+Amazon Elastic Kubernetes Service (EKS) is a hosted Kubernetes service offered by AWS.
+
+With Amazon EKS, users are no longer involved in the infrastructure management, deployment, and maintenance of the Kubernetes control plane. EKS provides a scalable and highly-available control plane that runs across multiple AWS availability zones. It can automatically detect the unhealthy Kubernetes control plane nodes and replace them as needed.
+
+EKS supports cluster autoscaling, to dynamically add worker nodes into the cluster, based on the workload and resource utilization. It also integrates with Kubernetes Role-Based Access Control (RBAC) to support AWS IAM authentication.
+
+![Amazon EKS](images/what-is-eks.png)
+
+Although master nodes are managed by AWS, users will still need to pay the hosting cost. They will also have to pay for the worker nodes.
+
+Key features and benefits of the Amazon Elastic Kubernetes Service (EKS) are listed below:
+
+- Users do not manage the Kubernetes control plane.
+- It provides secure communication between the worker nodes and the control plane.
+- It supports auto-scaling in response to changes in load.
+- It integrates well with various AWS services, such as IAM and CloudTrail.
+- It is a certified hosted Kubernetes platform.
+
+#### Azure Kubernetes Service (AKS)
+
+Azure Kubernetes Service is a hosted Kubernetes service offered by Microsoft Azure.
+
+AKS offers a fully-managed Kubernetes container orchestration service, which reduces the complexity and operational overhead of managing Kubernetes. AKS handles all of the cluster management tasks, health monitoring, upgrades, scaling.
+
+AKS also supports cluster autoscaling to dynamically add worker nodes into the cluster, based on the workload and resource utilization. It supports Kubernetes Role-Based Access Control (RBAC) and can integrate with Azure Active Directory for identity and security management.
+
+With AKS, users only pay for the agent/workers nodes that get deployed, while the control-plane nodes are managed by AKS for free.
+
+Key features and benefits of the Azure Kubernetes Service are listed below:
+
+- Users do not manage the Kubernetes Control Plane.
+- It supports GUI and CLI-based deployment.
+- It integrates well with other Azure services.
+- It is a certified hosted Kubernetes platform.
+- It is compliant with SOC and ISO/HIPAA/HITRUST.
+
+#### Google Kubernetes Engine (GKE)
+
+Google Kubernetes Engine is a fully-managed solution for running Kubernetes on the Google Cloud Platform (GCP). As we have learned earlier, Kubernetes is used for automating deployment, operations, and scaling of containerized applications.
+
+GKE Kubernetes can be integrated with all GCP services, like the Google Cloud operations suite for monitoring, tracing, diagnostics, logging, identity and access management, etc.
+
+Key features and benefits of the Google Kubernetes Engine are listed below:
+
+- It has all of Kubernetes' features.
+- It runs on a container-optimized OS built and managed by Google.
+- It is a fully-managed service, so the users no longer manage and scale the cluster.
+- We can store images privately, using the private container registry.
+- Logging can be enabled easily using Google Cloud Logging.
+- It supports Hybrid Networking to reserve an IP address range for the container cluster.
+- It enables a fast setup of managed clusters.
+- It facilitates increased productivity for Dev and Ops teams.
+- It is Highly Available in multiple zones and SLA promises 99.5% of availability.
+- It has Google-grade managed infrastructure.
+- It can be seamlessly integrated with all GCP services.
+- It provides a feature called Auto Repair, which initiates a repair process for unhealthy nodes.
+
+### Docker Swarm
+
+Docker Swarm is a native container orchestration tool from Docker, Inc. Docker, in swarm mode, logically groups multiple Docker Engines into a swarm, or cluster, that allows for applications to be deployed and managed at scale.
+
+![Docker Swarm](images/components-of-swarm.png)
+
+**Swarm Manager Nodes** accept commands on behalf of the cluster and make scheduling decisions. They also maintain the cluster state and store it using the Internal Distributed State Store, which uses the Raft consensus algorithm. One or more nodes can be configured as managers for fault-tolerance. When multiple managers are present, they are configured in active/passive modes.
+
+**Swarm Worker Nodes** run the Docker Engine and the sole purpose of the worker nodes is to run the container workload given by the manager node(s).
+
+Key benefits of using Docker Swarm are:
+
+- It is compatible with Docker tools and API, so that the existing workflow does not change much.
+- It provides native support to Docker networking and volumes.
+- It can scale up to large numbers of nodes.
+- It supports failover and High Availability for the cluster manager for fail-tolerance.
+- It uses a declarative approach to define the desired state of the various services of the application stack.
+- For each service, you can declare the number of tasks you want to run. When you scale up or down, the Swarm manager automatically adapts by adding or removing tasks to maintain the desired state.
+- The Docker Swarm manager node constantly monitors the cluster state and reconciles any differences between the actual state and your expressed desired state.
+- The communication between the nodes of Docker Swarm is enforced with Transport Layer Security (TLS), which makes it secure by default.
+- It supports rolling updates to control a delay between service deployment to different sets of nodes. If a task rollout is unsuccessful, you can roll back a task to a previous version of the service.
+
+### Nomad
+
+Nomad Overview
+HashiCorp Nomad is a cluster manager and resource scheduler from HashiCorp, which is distributed, highly available, and scales to thousands of nodes. It is designed to run microservices and batch jobs, and it supports different types of workloads, from Docker containers, VMs, to individual Java applications. In addition, it is capable of scheduling applications and services on different platforms like Linux, Windows, and Mac, both on-premises and public clouds.
+
+Although an alternative to the Kubernetes container orchestrator, it can run in conjunction with Kubernetes in a multi-orchestrator pattern, complementing each other especially in large enterprises where multiple types of applications need to be deployed and managed on diverse infrastructures through mixed scheduling mechanisms.
+
+It is distributed as a single binary, which has all of its dependency and runs in a server and client mode. To submit a job, the user has to define it using a declarative language called HashiCorp Configuration Language (HCL) with its resource requirements. Once submitted, Nomad will find available resources in the cluster and run it to maximize the resource utilization.
+
+Below we provide a sample job file:
+
+```hcl
+# Define the hashicorp/web/frontend job
+job "hashicorp/web/frontend" {
+
+    # Job should run in the "us" region
+    region = "us"
+ 
+    # Run in two datacenters
+
+    datacenters = ["us-west-1", "us-east-1"]
+
+    # Only run our workload on linux
+
+    constraint {
+        attribute = "$attr.kernel.name"
+        value = "linux"
+    }
+
+    # Configure the job for rolling updates
+    update {
+        # Stagger updates every 30 seconds
+        stagger = "30s"
+
+        # Update a single task at a time
+        max_parallel = 1
+    }
+
+    # Define the task group together with an individual task (unit of work)
+    group "frontend" {
+        # Ensure we have enough servers to handle traffic
+        count = 10
+
+        task "web" {
+            # Use Docker to run our server
+            driver = "docker"
+            config {
+                image = "hashicorp/web-frontend:latest"
+            }
+
+            # Specify resource limits
+            resources {
+                cpu = 500
+                memory = 128
+                network {
+                    mbits = 10
+                    dynamic_ports = ["http"]
+                }
+            }
+        }
+    }  
+} 
+```
+
+The following are some of Nomad's key characteristics:
+
+- It handles both cluster management and resource scheduling.
+- It supports multiple workloads, like Docker containers, VMs, unikernels, and individual Java applications.
+- It has multi-datacenter and multi-region support. We can have a Nomad client/server running in different public clouds, while still part of the same logical Nomad cluster.
+- It bin-packs applications onto servers to achieve high resource utilization.
+- In Nomad, millions of containers can be deployed or upgraded by using the job file.
+- It provides a built-in dry run execution facility, which shows the scheduling actions that are going to take place.
+- It ensures that applications are running in failure scenarios.
+- It supports long-running services, as well as batch jobs and cron jobs.
+- It provides a built-in mechanism for rolling upgrades.
+- It can run in conjunction with Kubernetes in a multi-orchestrator pattern.
+- It seamlessly integrates with Terraform, Consul, and Vault for provisioning, networking, and sensitive data management.
+- Blue-green and canary deployments are supported through a declarative job file syntax.
+- If nodes fail, Nomad automatically redistributes the applications from unhealthy nodes to healthy nodes.
+
+### Cloud Container Orchestration Services
+
+#### Amazon Elastic Container Service (ECS)
+
+Amazon Elastic Container Service (ECS) is part of the Amazon Web Services (AWS) offerings. It is a fully managed containers orchestration service that is fast, secure, and highly scalable, making it easy to run, stop and manage containers on a cluster.
+
+Based on the desired infrastructure expected to host the running containers, it can be configured in three launch modes
+
+- Fargate Launch Type. AWS Fargate allows us to run containers without managing servers and clusters. In this mode, we just have to package our applications in containers along with CPU, memory, networking and IAM policies. We don't have to provision, configure, and scale clusters of virtual machines to run containers, as AWS will take care of it for us.
+![Fargate](images/fargate.png)
+- EC2 Launch Type. With the EC2 launch type, we can provision, patch, and scale the ECS cluster. This gives more control to our servers and provides a range of customization options.
+![EC2](images/ec2.png)
+- External Launch Type. The External launch type enables us to run containerized applications on-premises, on our own physical/virtual infrastructure with the help of the Amazon ECS Anywhere service. Amazon ECS Anywhere, or External Instances, allows for the on-premises infrastructure to be registered and appended as external instances to our public cloud infrastructure.
+
+Key components of Amazon ECS are:
+
+- Cluster. It is a logical grouping of tasks or services. With the EC2 launch type, a cluster is also a grouping of container instances.
+- Container Instance. It is only applicable if we use the EC2 launch type. We define the Amazon EC2 instance to become part of the ECS cluster and to run the container workload.
+- Container Agent. It is only applicable if we use the Fargate launch type. It allows container instances to connect to your cluster.
+- Task Definition. It specifies the blueprint of an application, which consists of one or more containers.  
+
+``` yaml
+{
+"containerDefinitions": [
+  {
+    "name": "wordpress",
+    "links": [
+      "mysql"
+    ],
+    "image": "wordpress",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ],
+    "memory": 500,
+    "cpu": 10
+  },
+  {
+    "environment": [
+      {
+        "name": "MYSQL_ROOT_PASSWORD",
+        "value": "password"
+      }
+    ],
+    "name": "mysql",
+    "image": "mysql",
+    "cpu": 10,
+    "memory": 500,
+    "essential": true
+  }
+],
+"family": "hello_world"
+}
+```
+
+- Scheduler. It places tasks on the cluster.
+- Service. It allows one or more instances of tasks to run, depending on the task definition. Below you can see the template of a service definition (from docs.aws.amazon.com). If there is an unhealthy task, then the service restarts it. One elastic load balancer (ELB) is attached to each service.
+
+``` yaml
+{
+    "cluster": "",
+    "serviceName": "",
+    "taskDefinition": "",
+    "loadBalancers": [
+        {
+            "loadBalancerName": "",
+            "containerName": "",
+            "containerPort": 0
+        }
+    ],
+    "desiredCount": 0,
+    "clientToken": "",
+    "role": "",
+    "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100
+    }
+}
+```
+
+- Task. It is a running container instance from the task definition.
+- Container. It is a container created from the task definition.
+
+Key features of Amazon ECS are:
+
+- It is compatible with Docker containers and Windows containers as well.
+- It provides a managed cluster so that users do not have to worry about managing and scaling the cluster.
+- The task definition allows the user to define the applications through a JSON file. Shared data volumes, as well as resource constraints for memory and CPU, can also be defined in the same file.
+- It provides APIs to manage clusters, tasks, etc.
+- It allows easy updates of containers to new versions.
+- The monitoring feature is available through AWS CloudWatch.
+- The logging facility is available through AWS CloudTrail.
+- It supports third party hosted Docker registries, the public Docker Hub, or the Amazon Elastic Container Registry (ECR).
+- AWS Fargate allows you to run and manage containers without having to provision or manage servers.
+- It allows you to build all types of containers. You can build a long-running service or a batch service in a container and run it on ECS.
+- You can apply your Amazon Virtual Private Cloud (VPC), security groups and AWS Identity and Access Management (IAM) roles to the containers, which helps maintain a secure environment.
+- You can run containers across multiple availability zones within regions to maintain High Availability.
+- It can be integrated with AWS services like Elastic Load Balancing (ELB), Virtual Private Cloud (VPC), Identity and - Access Management (IAM), Amazon ECR, AWS Batch, Amazon CloudWatch, AWS CloudFormation, AWS CodeStar, AWS CloudTrail, and more.
+
+#### Azure Container Instances (ACI)
+
+Azure Container Instances (ACI) are part of the Microsoft Azure family of cloud services and aim to simplify the container deployment process without the hassle of managing the infrastructure servers.
+
+ACI is a solution designed for scenarios where container isolation is desired for simple applications, automated tasks, or jobs because it only provides some of the basic scheduling capabilities of dedicated orchestration platforms. Therefore, when advanced features such as service discovery and auto-scaling are desired, as provided by full container orchestration platforms, then the recommended solution is Azure Kubernetes Service (AKS). However, ACI can be used in conjunction with an orchestrator such as AKS in a layered approach, to schedule and manage single containers while the orchestrator manages the multi-container groups.
+
+Key features of Azure Container Instances (ACI) are:
+
+- They expose containers directly to the internet through IP addresses and fully qualified domain names (FQDN).
+- Allow user interaction with the environment of a running container by executing commands in the container through a shell.
+- Offer VM-like application isolation in the container.
+- Allow for resource specification, such as CPU and memory.
+- They allow containers to mount directly Azure File shares to persist their state.
+- They support the running of both Linux and Windows containers.
+- They support the scheduling of single- and multi-container groups, thus allowing patterns like the sidecar pattern.
+
+## 7 - Unikernels
+
+Generally, a developer's goal is to run an application, and the container technology is helping to achieve this goal by packaging the application, dependencies, and libraries into an image, which ultimately ensure the application runs in an easily reproducible fashion on any environment, not only on the distribution where it was built. Part of the containers' running process, there is a necessity to ship the entire user-space libraries of the respective distribution with the application. In most cases, the majority of the libraries would not be consumed by the application. Therefore, it makes sense to ship the application only with the set of user-space libraries which are needed by the application.
+
+With unikernels, we can also select the part of the kernel needed to run with the specific application. The unikernel image becomes a single address space executable, including both application and kernel components. The image can be deployed on VMs or bare metal, based on the unikernel's type.
+
+### Specialized VM Images
+
+The Unikernel goes one step further than other technologies, creating specialized virtual machine images with just:
+
+- The application code
+- The configuration files of the application
+- The user-space libraries needed by the application
+- The application runtime (like JVM)
+- The system libraries of the unikernel, which allow back and forth communication with the hypervisor.
+
+According to the protection ring of the x86 architecture, we run the kernel on ring0 and the application on ring3, which has the least privileges. ring0 has the most privileges, like access to hardware, and a typical OS kernel runs on that. With unikernels, a combined binary of the application and the kernel runs on ring0.
+
+Unikernel images would run directly on top of a hypervisor like Xen or on bare metal, based on the unikernels' type. The following image shows how the Mirage Compiler creates a unikernel VM image.
+
+![Unikernel](images/MirageOSUnikernel.png)
+
+The following are key benefits of unikernels:
+
+- A minimalistic VM image to run an application, which allows us to have more applications per host.
+- A faster boot time.
+- Efficient resource utilization.
+- A simplified development and management model.
+- A more secured application than the traditional VM, as the attack surface is reduced.
+- An easily-reproducible VM environment, which can be managed through a source control system like Git.
+
+### Unikernels and Docker (MirageOS)
+
+In January of 2016, Docker acquired Unikernels to make them first-class citizen of the Docker ecosystem. Both containers and unikernels can co-exist on the same host and can be managed by the same Docker binary.
+
+For a long time containers attempted to simplify things, by running microservices that were simple to build and the containers themselves easy to deploy, yet still incorporating a lot of complexity in the container image. Once unikernels have been introduced, further simplification of the resulted in a significant boost in performance. These specialized unikernel virtual machines, are much lighter than containers because they remove the unnecessary components of the operating system such as permissions and isolation, and further decrease the attack surface. MirageOS became a great unikernel success because it was able to produce a library operating system that was flexible, secure, reusable, stripped of unnecessary drivers, daemons, and libraries.
+
+Unikernels helped Docker to run the Docker Engine on top of Alpine Linux on Mac and Windows with their default hypervisors, which are xhyve Virtual Machine and Hyper-V VM respectively.
+
+![Unikernel](images/unikernel.png)
+
+## 8 - Microservices
+
+Microservices are light-weight, independent processes that collectively form complex application solutions. These independent processes communicate with each other through language agnostic APIs. Services are small building blocks, independently deployed, loosely coupled, that aim to perform simple tasks. As a result, services introduce a modular approach to system-building. The microservice architecture has become the standard for building and implementing continuously deployed systems.
+
+For more than a decade, building the right kind of tooling around virtualization and cloud management has accelerated the adoption and consumption of cloud technologies:
+
+- The launch of Amazon Web Services (AWS) in 2006 enabled the provisioning and usage of compute resources on demand from a web console or from the command-line interface.
+- The launch of Heroku in 2007 enabled the deployment of locally-built applications in the cloud with just a couple of commands.
+- The launch of Vagrant in 2010 simplified the creation mechanism of reproducible development environments.
+
+With the help of such tools, software engineers and architects started to move away from large monolithic applications managed in their entirety through one code-base. Having one code-base makes the application difficult to manage and scale.
+
+Over the years, after trials and errors, the technology evolved towards a new approach where an application is deployed and managed via a small set of services. Each service runs its own process and communicates with other services via lightweight mechanisms like REST APIs. Each of these services is independently deployed and managed. Technologies like containers and unikernels are becoming default choices for creating such services.
+
+![Mono vs Micro](images/MonolithicvsMicroservices.png)
+
+### Refactoring Monolithic Applications
+
+We have been designing applications for decades and have a very good understanding of modularizing the code. In simpler terms, we can create a microservices environment by extending those modules into individual services. Though there is no rule of thumb to follow every time we refactor a monolith into microservices, there are some approaches that we can look at:
+
+- If you have a complex monolith application, then it is not advisable to rewrite the entire application from scratch. Instead, you should start carving out services from the monolith, which implement the desired functionalities for the code we take out from the monolith. Over time, all or most functionalities will be implemented in the microservices architecture.
+- We can split the monoliths based on the business logic, front-end (presentation), and data access. In the microservices architecture, it is recommended to have a local database for individual services. And, if the services need to access the database from other services, then we can implement event-driven communication between these services.
+- As mentioned earlier, we can split the monolith based on the modules of the monolith application, and each time we do it, our monolith shrinks.
+
+Also, if we need a new functionality while we are refactoring the monolith to microservices, then we should create a microservice instead of adding more code to the monolith.
+
+### Benefits of Microservices
+
+The microservices architecture has several benefits, some of which are listed below:
+
+- There is no language or technology lock-in. As each service works independently, we can choose any programming language, technology, or framework for its development. We just need to make sure its API endpoints return the expected output.
+- Each service in a microservice can be deployed independently.
+- We do not have to take an entire application down just to update or scale a component. Each service can be updated or scaled independently. This gives us the ability to respond faster.
+- If one service fails, then its failure does not have a cascading effect. This helps in debugging as well.
+- Once the code of a service is written, it can be used in other projects, where the same functionality is needed.
+- The microservice architecture enables continuous delivery.
+- Components can be deployed across multiple servers or even multiple data centers.
+- They work very well with container orchestration tools like Kubernetes, Nomad and Swarm.
+
+### Challenges of Microservices
+
+Just like any other technology, the microservices architecture has its own set of challenges:
+
+- Choosing the right service size. While refactoring the monolith application or creating microservices from scratch, it is very important to choose the right functionality for a service. For example, if we create a microservice for each function of a monolith, then we would end up with lots of small services, which would bring unnecessary complexity.
+- Deployment. We can easily deploy a monolith application. However, to deploy a microservice, we need to use a distributed environment such as Kubernetes.
+- Testing. With lots of services and their inter-dependency, sometimes it becomes challenging to perform end-to-end testing of a microservice.
+- Inter-service communication can be very costly if it is not implemented correctly. There are options such as message passing, or RPC, and we need to choose the one that fits our requirement and has the least overhead.
+- Managing databases. When it comes to the microservices' architecture, we may decide to implement a database local to a microservice. However, to close a business loop, changes may be required in other related databases as well, especially when a transaction needs to be persisted across many databases. This may add dependencies and complexity (e.g. partitioned databases).
+- Monitoring and logging. Monitoring individual services in a microservices environment can be challenging. This challenge is being addressed by specialized tools, such as Elastic, Sysdig, or Datadog, designed to monitor, log, and help debug microservices type applications scaled across distributed environments.
+
+Even with the above challenges and drawbacks, deploying microservices is still an advantageous approach when applications are complex and continuously evolving.
+
+## 9 - Software Defined Networking (SDN) and Networking for Containers
