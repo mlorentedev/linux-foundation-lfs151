@@ -1370,3 +1370,592 @@ Just like any other technology, the microservices architecture has its own set o
 Even with the above challenges and drawbacks, deploying microservices is still an advantageous approach when applications are complex and continuously evolving.
 
 ## 9 - Software Defined Networking (SDN) and Networking for Containers
+
+### SDN architecture
+
+In networking, we have three planes:
+
+- The data plane, which is responsible for forwarding packets and apply actions to the based on rules which we have defined into lookup tables.
+
+- The control plane, which is responsible for managing the data plane. It is responsible for making decisions about how packets should be forwarded, Quality of Service (QoS), and other network policies.
+
+- The management plane, which is responsible for managing the network devices, such as configuring devices, monitoring, and troubleshooting.
+
+Along with these planes, every network device has to perform the following functions:
+
+- Ingress and eggress packet processing. These are performed at the lowest layer, which decides what to do with ingress packets and which packets to forward, based on forwarding tables. These activities are mapped as Data Plane activities. All routers, switches, modem, etc., are part of this plane.
+
+- Collect, process, and manage the network information. By collecting, processing, and managing the network information, the network device makes the forwarding decisions, which the Data Plane follows. These activities are mapped by the Control Plane activities. Some of the protocols which run on the Control Plane are routing and adjacent device discovery.
+
+- Monitor and manage the network. Using the tools available in the Management Plane, we can interact with the network device to configure it and monitor it with tools like SNMP (Simple Network Management Protocol).
+
+In software-defined networking, we decouple the Control Plane with the Data Plane. The Control Plane has a centralized view of the overall network, which allows it to create forwarding tables of interest. These tables are then submitted to the Data Plane to manage network traffic.
+
+![SDN](images/TheSDNFramework.png)
+
+The Control Plane has well-defined APIs that receive requests from applications to configure the network. After preparing the desired state of the network, the Control Plane communicates that to the Data Plane (also known as the Forwarding Plane), using a well-defined protocol like OpenFlow.
+
+We can use configuration tools like Ansible or Chef to configure SDN, which brings lots of flexibility and agility on the operations side as well.
+
+### Networking for Containers
+
+Similar to VMs, containers need to be able to communicate with containers running on the same host and with containers running on different hosts. The host uses the network namespace feature of the Linux kernel to isolate the network from one container to another on the system. Network namespaces can be shared between containers, a feature extensively used even by container orchestration tools like Kubernetes.
+
+On a single host, when using the virtual Ethernet (vEth) feature with Linux bridging, we can give a virtual network interface to each container and assign it an IP address. With technologies like Macvlan and IPVlan we can configure each container to have a unique world-wide routable IP address.
+
+As of now, multi-host networking with containers can be achieved by using some form of Overlay network driver, which encapsulates the Layer 2 traffic to a higher layer. Examples of this type of implementation are the Docker Overlay Driver, Flannel, and Weave. Other types of implementations are also available, such as Project Calico, which allows multi-host networking on Layer 3 using BGP (Border Gateway Protocol).
+
+Two distinct standards have been proposed for container networking:
+
+- Container Network Model (CNM)  
+  Docker, Inc. is the primary driver for this networking model implemented using the libnetwork project. Libnetwork standardizes the container network creation process through three main build components: a network sandbox, one or multiple endpoints, and one or multiple networks. Libnetwork is used in one of the following modes:
+  - Null. NOOP implementation of the driver. It is used when no networking is required.
+  - Bridge. It provides a Linux-specific bridging implementation based on Linux Bridge.
+  - Overlay/Swarm. It provides multi-host communication over VXLAN.
+  - Remote. It does not provide a driver. Instead, it provides a means of supporting drivers over a remote transport, by which we can write third-party drivers.
+
+- Container Network Interface (CNI)  
+  It is a Cloud Native Computing Foundation (CNCF) project which consists of specifications and libraries for writing plugins to configure network interfaces in Linux containers, along with a number of supported plugins. It is limited to providing network connectivity of containers and removing allocated resources when the container is deleted. As such, it has a wide range of support. It is used by projects like Kubernetes, OpenShift, and Cloud Foundry.
+
+Now that we provided an overview on networking, let's take a moment to discuss service discovery as well. This becomes extremely important when we are looking to implement multi-host networking and use some form of container orchestration with Kubernetes or Swarm.
+
+Service discovery is a mechanism that enables processes and services to find each other automatically and to talk to each other. With respect to containers, it is used to map a container name with its IP address, so that we can access the container directly by its name without worrying about its exact location (IP address) which may change during the life of the container.
+
+Service discovery is achieved in two steps. First, the service registers itself with the service discovery system, and second, the service queries the service discovery system to find the location of the service it wants to communicate with. This is supported by DNS-based service discovery, where the service name is resolved to an IP address.
+
+### Docker Networking
+
+#### Single Host Networking
+
+let's start with Docker's single-host networking to understand how is the networking setup on a single Docker host for its containers. If we list the available networks after installing the Docker daemon, we should see something like the following:
+
+```bash
+$ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+f7b9e2b3b3b3        bridge              bridge              local
+f7b9e2b3b3b3        host                host                local
+f7b9e2b3b3b3        none                null                local
+```
+
+bridge, null, and host are distinct network drivers available on a single Docker host. Next, we will explore these drivers.
+
+#### Bridge Driver
+
+Similarly to the hardware bridge, we can emulate a software bridge network on a Linux host. It can forward traffic between two networks based on MAC (hardware address) addresses. By default, Docker creates a docker0 Linux bridge network. Each container running on a single host receives a unique IP address from this bridge network unless we specify some other network with the --net= option. Docker uses Linux's virtual Ethernet (vEth) feature to create a pair of two virtual interfaces, with the interface on one end attached to the container and the interface on the other end of the pair attached to the docker0 bridge network.
+
+Displaying the network configuration after installing Docker on a single host should reveal the default bridge network as illustrated below:
+
+```bash
+$ ifconfig
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet
+        inet6
+        ether
+        txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+```
+
+We can create a new container using the following command, then list its IP address:
+
+```bash
+$ docker container run -it --name=c1 busybox /bin/sh
+
+/ # ip a
+
+1: lo: <LOOPBACK,UP,LOWE_UP> mtu 65536 qdisc noqueue qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+7: eth0@if8: <BROADCAST,MULTICAST,UP, LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.2/16 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:acff:fe11:2/64 scope link
+       valid_lft forever preferred_lft forever
+```
+
+We can inspect a network to list detailed information about it. In the example below, c1 appears to be connected to the bridge network:
+
+```bash
+$ docker network inspect bridge
+
+[
+     {
+        "Name": "bridge",
+        "Id": "6f30debc5baff467d437e3c7c3de673f21b51f821588aca2e30a7db68f10260c",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16"
+                }
+            ]
+        },
+        "Internal": false,
+        "Containers": {
+            "613f1c7812a9db597e7e0efbd1cc102426edea02d9b281061967e25a4841733f": {
+                 "Name": "c1",
+                 "EndpointID": "80070f69de6d147732eb119e02d161326f40b47a0cc0f7f14ac7d207ac09a695",
+                 "MacAddress": "02:42:ac:11:00:02",
+                 "IPv4Address": "172.17.0.2/16",
+                 "IPv6Address": ""
+
+...
+
+]
+```
+
+We can also create our own custom bridge network by running the following command:
+  
+```bash
+docker network create --driver bridge mybridge
+```
+
+It creates a custom Linux bridge on the host system. To create a container and have it use the newly created network, we have to start the container with the --net=my_bridge option:
+
+```bash
+docker run -itd --name mycontainer --net=mybridge ubuntu:latest
+```
+
+Docker allows us to attach a container to as many networks as we like. A new container is attached to a network with the --net flag while an already running container is attached to an additional network with the docker network connect command.
+
+A bridge network does not support automatic service discovery, so we have to rely on the legacy --link option.
+
+![Bridge](images/CreatingaBridgeNetwork.png)
+
+#### Null Driver
+
+As the name suggests, NULL means no networking. If we run a container with the null driver, then it would just get the loopback interface. It would not be accessible from any other network.
+
+```bash
+$ docker container run -it --name=c3 --net=none busybox /bin/sh
+
+/ # ip a
+
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 1disc noqueue qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet ::1/128 scope host
+       valid_lft forever preferred_lft forever
+```
+
+#### Host Driver
+
+The host driver allows us to share the host machine's network namespace with a container. By doing so, the container would have full access to the host's network, which is not a recommended approach due to its security implications. Running an ifconfig command inside the container lists all the interfaces of the host system:
+
+```bash
+$ docker container run -it --name=c4 --net=host busybox /bin/sh
+
+
+/ # ifconfig
+
+docker0   Link encap:Ethernet HWaddr 02:42:A9:DB:AF:39
+
+
+          inet addr:172.17.0.1 Bcast:0.0.0.0 Mask:255.255.0.0
+          inet6 addr: fe80::42:a9ff:fedb:af39/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+          RX packets:8 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:536 (536.0 B) TX bytes:648 (648.0 B)
+
+eth0      Link encap:Ethernet HWaddr 08:00:27:CA:BD:10
+          inet addr:10.0.2.15 Bcast:10.0.2.255 Mask:255.255.255.0
+          inet6 addr: fe80::a00:27ff:feca:bd10/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+          RX packets:3399 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2050 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:1021964 (998.0 KiB) TX bytes:287879 (281.1 KiB)
+
+eth1      Link encap:Ethernet HWaddr 08:00:27:00:42:F9
+          inet addr:192.168.99.100 Bcast:192.168.99.255 Mask:255.255.255.0
+          inet6 addr: fe80::a00:27ff:fe00:42f9/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+          RX packets:71 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:46 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:13475 (13.1 KiB) TX bytes:7754 (7.5 KiB)
+
+lo        Link encap:Local Loopback
+          inet addr:127.0.0.1 Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING MTU:65536 Metric:1
+          RX packets:16 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:16 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1
+          RX bytes:1021964376 (1.3 KiB) TX bytes:1376 (1.3 KiB)
+
+vethb3bb730 Link encap:Ethernet HWaddr 4E:7C:8F:B2:2D:AD
+          inet6 addr: fe80::4c7c:8fff:feb2:2dad/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+          RX packets:8 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:16 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:648 (648.0 B) TX bytes:1296 (1.2 KiB)
+```
+
+#### Sharing Container Network Namespaces
+
+Similar to host, we can share network namespaces among containers. As a result, two or more containers can share the same network stack and reach each other through localhost.
+
+Let's run a new container and retrieve its IP address:
+
+```bash
+$ docker container run -it --name=c5 busybox /bin/sh
+
+/ # ip a
+
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+        valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+        valid_lft forever preferred_lft forever
+
+10: eth0@if11: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue
+    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.3/16 scope global eth0
+        valid_lft forever preferred_lft forever
+    inet6 fe80::42:acff:fe11:3/64 scope link
+        valid_lft forever preferred_lft forever
+```
+
+Now, if we start a new container with the --net=container:CONTAINER option, the second container will show the same IP address.
+
+```bash
+$ docker container run -it --name=c6 --net=container:c5 busybox /bin/sh
+/ # ip a
+
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+        valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+        valid_lft forever preferred_lft forever
+
+12: eth0@if13: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue
+    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.3/16 scope global eth0
+        valid_lft forever preferred_lft forever
+    inet6 fe80::42:acff:fe11:3/64 scope link
+        valid_lft forever preferred_lft forever
+```
+
+Kubernetes, the leading container orchestrator, uses the feature detailed above to share the same network namespaces among multiple containers in a pod.
+
+#### Multi-Host Networking
+
+In addition to the single-host networking, Docker also supports multi-host networking which allows containers from one Docker host to communicate with containers from another Docker host when they are part of a Swarm. By default, Docker supports two drivers for multi-host networking.
+
+- Overlay Driver. With the Overlay driver, Docker encapsulates the container's IP packet inside a host's packet while sending it over the wire. While receiving, Docker on the other host decapsulates the whole packet and forwards the container's packet to the receiving container. This is accomplished with libnetwork, a built-in VXLAN-based overlay network driver.
+
+![Overlay](images/DockerOverlayDriver.png)
+
+- Macvlan Driver. With the Macvlan driver, Docker assigns a MAC (physical) address for each container and makes it appear as a physical device on the network. As the containers appears in the same physical network as the Docker host, we can assign them an IP from the network subnet as the host. As a result, direct container-to-container communication is enabled between different hosts. Containers can also directly talk to hosts. However, we need hardware support to implement the Macvlan driver.
+
+### Podman Networking
+
+Podman network operations allow us to list networks, create custom networks, inspect them, attach containers to them, and finally remove them when no longer needed. Podman supports the creation of CNI-compliant container networks. To create container networks, Podman supports drivers for various network types. Default is the bridge driver, usable in both rootless and rooted modes. However, in rooted mode, two additional drivers can be used, the macvlan and ipvlan drivers, with options such as parent to designate a host device and the mode to be set on the interface. The macvlan and ipvlan drivers are only available in rooted mode because they require access to the host network interfaces, otherwise the rootless networking needs a separate network namespace.
+
+A mix of rootless ($) and rooted (#) network operations are provided below:
+  
+```bash
+$ podman network ls
+$ podman network create --subnet 192.168.20.0/24 --gateway 192.168.20.3 bridgenet
+$ podman network inspect bridgenet
+# podman network create -d macvlan -o parent=eth0 macvnet
+# podman network inspect macvnet
+```
+
+### Kubernetes Networking
+
+As we know, the smallest deployment unit in Kubernetes is a Pod, which may include one or more containers. Kubernetes assigns a unique IP address to each Pod. Containers in a Pod share the same network namespace, thus sharing the same IP address of the Pod, and can refer to each other by localhost. We learned about network namespaces sharing between containers earlier, in a prior section. Containers in a Pod can expose unique ports, and become accessible through the same Pod IP address.
+
+As each Pod gets a unique IP, Kubernetes assumes that Pods should be able to communicate with each other, irrespective of the nodes they get scheduled on. There are different ways to achieve this. Kubernetes introduced the Container Network Interface (CNI) specification for container networking together with the following requirements that need to be implemented by Kubernetes networking driver developers:
+
+- All pods on a node can communicate with all pods on all nodes without NAT
+- Agents on a Node (e.g. system daemons, kubelet) can communicate with all Pods on that Node
+- The Pods in the host network of a Node can communicate with all Pods on all Nodes without NAT (for Linux or other platforms supporting Pods running in the host network).
+
+The projects implementing the Kubernetes CNI are in fact SDN implementations, deployed on a Kubernetes cluster as plugins, that build a private, virtual, and isolated network layer for Pod to Pod communication. Next, we take a loot at several implementations of Kubernetes networking plugins.
+
+- AWS VPC CNI for Kubernetes  
+  AWS VPC CNI offers integrated AWS Virtual Private Cloud (VPC) networking for Kubernetes clusters. Kubernetes cluster networks can use AWS VPC networking and security features such as VPC flow logs, VPC routing policies, and Security Groups for traffic isolation.
+- Azure CNI for Kubernetes  
+  Azure CNI is an open source plugin that integrates Kubernetes Pods with an Azure Virtual Network (also known as VNet) providing network performance at par with VMs.
+- Calico  
+  Calico uses the BGP protocol to meet the Kubernetes networking requirements.
+- Cilium  
+  Cilium provides secure network connectivity between application containers. It is L7/HTTP aware and can also enforce network policies on L3-L7.
+- Flannel  
+  Flannel uses the overlay network, as we have seen with Docker, to meet the Kubernetes networking requirements.
+- NSX-T  
+  NSX-T from VMware provides network virtualization for a multi-cloud and multi-hypervisor environment. The NSX-T Container Plug-in (NCP) provides integration between NSX-T and container orchestrators such as Kubernetes.
+- OVN-Kubernetes  
+  OVN-Kubernetes provides overlay based networking for Kubernetes, and Open VSwitch (OVS) based load balancing and network policy.
+- Weave Net  
+  Weave Net, a simple network for Kubernetes, may run as a CNI plug-in or stand-alone. It does not require additional configuration to run, and the network provides the one IP address per pod, as it is required and expected by Kubernetes.
+
+### Cloud Foundry: Container-to-Container Networking
+
+By default, Gorouter routes the external and internal traffic to different Cloud Foundry components. The container-to-container networking feature of CF enables application instances to communicate with each other directly. However, when the container-to-container networking feature is disabled, all application-to-application traffic must go through the Gorouter.
+
+Container-to-container networking is made possible by several components of the CF architecture:
+
+- Network Policy Server  
+  A management node hosting a database of app traffic policies.
+- Garden External Networker  
+  Sets up networking for each app through the CNI plugin, exposing apps to the outside, by allowing incoming traffic from Gorouter, TCP Router, and SSH Proxy.
+- Silk CNI Plugin  
+  For IP management through a shared VXLAN overlay network that assigns each container a unique IP address. The overlay network is not externally routable and it prevents the container-to-container traffic from escaping the overlay.
+- VXLAN Policy Agent  
+  Enforces network policies between apps. When creating routing rules for network policies, we should include the source app, destination app, protocol, and ports, without going through the Gorouter, a load balancer, or a firewall.
+
+## 10 - Software Defined Storage (SDS) and Storage for Containers
+
+Software-defined storage (SDS) represents storage virtualization aimed to separate the underlying storage hardware from the software that manages and provisions it. Physical hardware from various sources can be combined and managed with software, as a single storage pool. SDS replaces static and inefficient storage solutions backed directly by physical hardware with dynamic, agile, and automated solutions. In addition, SDS may provide resiliency features such as replication, erasure coding, and snapshots of the pooled resources. Once the pooled storage is configured in the form of a storage cluster, SDS allows multiple access methods such as File, Block, and Object.
+
+![SDS](images/SoftwareDefinedStorage.png)
+
+### Ceph
+
+Ceph is an open source distributed storage system that supports applications with different storage interface needs, as it provides object, block, and filesystem storage in a single unified storage cluster, making Ceph flexible, highly reliable, and easy to manage.
+
+Everything in Ceph is stored as objects. Ceph uses the Controlled Replication Under Scalable Hashing (CRUSH) algorithm to deterministically find, write, and read the location of objects.
+
+![Ceph](images/CephArchitecture.png)
+
+- Reliable Autonomic Distributed Object Store (RADOS)  
+  It is the object store which stores the objects. This layer makes sure that data is always in a consistent and reliable state. It performs operations like replication, failure detection, recovery, data migration, and rebalancing across the cluster nodes. This layer has the following three major components:
+  - Object Storage Device (OSD)  
+    This is where the actual user content is written and retrieved with read operations. One OSD daemon is typically tied to one physical disk in the cluster.
+  - Ceph Monitors (MON)  
+    Monitors are responsible for monitoring the cluster state. All cluster nodes report to Monitors. Monitors map the cluster state through the OSD, Place Groups (PG), CRUSH and Monitor maps.
+  - Ceph Metadata Server (MDS)  
+    It is needed only by CephFS, to store the file hierarchy and metadata for files.
+- Librados  
+  It is a library that allows direct access to RADOS from languages like C, C++, Python, Java, PHP, etc. Ceph Block Device, RADOSGW, and CephFS are implemented on top of Librados.
+- Ceph Block Device (RBD)  
+  This provides the block interface for Ceph. It works as a block device and has enterprise features like thin provisioning and snapshots.
+- RADOS Gateway (RADOSGW)  
+  This provides a REST API interface for Ceph, which is compatible with Amazon S3 and OpenStack Swift.
+- Ceph File System (CephFS)  
+  This provides a POSIX-compliant distributed filesystem on top of Ceph. It relies on Ceph MDS to track the file hierarchy.
+
+### GlusterFS
+
+Gluster can utilize common off-the-shelf hardware, to create large, distributed storage solutions for media streaming, data analysis, and other data- and bandwidth-intensive tasks.
+
+To create shared storage, we need to start by grouping the machines in a trusted pool. Then, we group the directories (called bricks) from those machines in a GlusterFS volume, using Filesystem in Userspace (FUSE). GlusterFS supports different types of volumes:
+
+- Distributed GlusterFS volume
+- Replicated GlusterFS volume
+- Distributed replicated GlusterFS volume
+- Dispersed GlusterFS volume
+- Distributed dispersed GlusterFS volume.
+
+Below, we present an example of a distributed GlusterFS volume:
+
+![GlusterFS](images/DistributedGlusterFSVolume.png)
+
+GlusterFS does not have a centralized metadata server. It uses an elastic hashing algorithm to store files on bricks. The GlusterFS volume can be accessed using one of the following methods: NFS, CIFS, or FUSE.
+
+### Docker Volumes
+
+Containers are ephemeral in nature, meaning that all data stored inside the container's filesystem would be lost when the container is deleted. It is best practice to store data outside the container, which keeps the data accessible even after the container is deleted.
+
+In a multi-host or clustered environment, containers can be scheduled to run on any host. We need to make sure the data volume required by the container is available on the host on which the container is scheduled to run.
+
+Docker uses the copy-on-write mechanism when containers are started from container images. The container image is protected from direct edits by being saved on a read-only filesystem layer. All of the changes performed by the container to the image filesystem are saved on a writable filesystem layer of the container. Docker images and containers are stored on the host system and we can choose the storage driver for Docker storage, depending on our requirements. Docker supports the following storage drivers on Linux:
+
+- BtrFS  
+  Supports snapshots.
+- Device Mapper  
+  For earlier CentOS and RHEL releases.
+- Fuse-Overlay  
+  Preferred for rootless mode.
+- Overlay2  
+  Preferred for all supported Linux distributions (Ubuntu, Debian, CentOS, Fedora, RHEL, SLES 15).
+- VFS (Virtual File System)  
+  For testing only, not for production.
+- ZFS  
+  Supports snapshots.
+
+Docker supports several options for storing files on a host system.
+
+- Bind Mounts  
+  A bind mount is a mapping of a host file or directory to a container file or directory. It is a simple way to share files between the host and the container. The host file or directory is mounted into the container at the specified path.
+- Volumes  
+  A volume is a directory that is stored outside the container's filesystem and is managed by Docker. Volumes are the preferred way to persist data generated by and used by Docker containers. Volumes are easier to back up or migrate than bind mounts. Volumes can be shared among multiple containers.
+- tmpfs Mounts  
+  A tmpfs mount is stored in the host system's memory and is never written to the host system's filesystem.
+
+In Docker, a container with a mounted volume can be created using either the docker container run or the docker container create commands:
+
+```bash
+docker container run -d --name web -v webvol:/webdata myapp:latest
+```
+
+The above command would create a Docker volume inside the Docker working directory `/var/lib/docker/volumes/webvol/_data` on the host system, mounted on the container at the /webdata mount point. We may list the exact mount path via the docker container inspect command:
+
+```bash
+docker container inspect web
+```
+
+In Docker, a container with a bind mount can be created using either the docker container run or the docker container create commands:
+
+```bash
+docker container run -d --name web -v /mnt/webvol:/webdata myapp:latest
+```
+
+It mounts the host's `/mnt/webvol` directory to the `/webdata` mount point on the container as it is being started.
+
+### Podman Volumes
+
+As a result of the ephemeral nature of containers, all data stored inside the container's filesystem would be lost when the container is deleted. In order to preserve the data even after the container is deleted, it is recommended to store data outside the container. In a distributed multi-host environment, containers can be scheduled to run on any host, and the storage volume should be available on the host where the container runs.
+
+Podman is also capable of using the copy-on-write mechanism when containers are run. The container image is saved on a read-only filesystem layer while all changes performed by the container are saved on a writable filesystem layer of the container. We can choose the storage driver for Podman out of the supports list below:
+
+- OverlayFS. The default storage driver for Podman.
+- VFS
+- Device Mapper
+- Btrfs
+- ZFS
+- Thinpool
+
+Podman supports several mount types for storing container files on a host system.
+
+- Bind Mounts  
+  Podman can mount a named volume from the host system into the container.
+- Volumes  
+  Volumes are stored under the `/var/lib/containers/storage/volumes` directory for root, and under the `$HOME/.local/share/containers/storage/volumes` directory for regular users. They are directly managed by Podman, and represent the recommended method of storing persistent data with Podman.
+- tmpfs Mounts  
+  A tmpfs mount is stored in the host system's memory and is never written to the host system's filesystem.
+- Image Mounts  
+  To mount an OS image file.
+- Devpts Mounts  
+  To mount a filesystem storing pseudoterminal (telnet, ssh, xterm) data.
+
+A container with a mounted volume can be created using either the podman container run or the podman container create commands:
+
+```bash
+podman container run -d --name=web -v webvol:/webdata myapp:latest
+```
+
+The above command would create on the host system a volume in the Podman working directory of the current user `$HOME/.local/share/containers/storage/volumes/webvol/_data`, or in the `/var/lib/containers/storage/volumes/webvol/_data` if run by root, and mount it on the container at the `/webdata` mount point. We may display the mount path with the podman container inspect command:
+
+```bash
+podman container inspect web
+```
+
+A bind mount can be achieved with either the podman container run or the podman container create commands:
+
+```bash
+podman container run -d --name=web -v /mnt/webvol:/webdata myapp:latest
+```
+
+It mounts the host's `/mnt/webvol` directory to the `/webdata` mount point on the container as it is being started.
+
+### Kubernetes Volumes
+
+Kubernetes uses volumes to attach external storage to containers managed by Pods. A volume is essentially a directory, backed by a storage medium. The storage medium and its contents are determined by the volume type.
+
+![KubernetesVolumes](images/KubernetesVolumes.svg)
+
+A volume in Kubernetes is linked to a Pod and shared among containers of that Pod. The volume has the same lifetime as the Pod but it outlives the containers of that Pod, meaning that data remains preserved across container restarts. However, once the Pod is deleted, the volume and all its data are lost as well.
+
+A volume may be shared by some of the containers running in the same Pod. The diagram above illustrates a Pod with two containers, a File Puller and a Web Server, sharing a storage Volume.
+
+A volume mounted inside a Pod is backed by an underlying volume type. A volume type decides the properties of the volume, such as size and content type. Kubernetes is currently (as of September 2023) migrating from its in-tree always available storage plugins approach. The new approach is based on third party drivers implementing the Container Storage Interface (CSI), and it impacts most cloud storage types. The CSI driver approach requires the Kubernetes operators to download and install the desired CSI driver when needed. Some of the volume types supported by Kubernetes are explained below.
+
+- awsElasticBlockStore  
+  With the awsElasticBlockStore volume type, we can mount an AWS EBS volume on containers of a Pod.
+- azureDisk  
+  With azureDisk, we can mount an Azure Data Disk on containers of a Pod.
+- azureFile  
+  We can use azureFile to mount an Azure File Volume on containers of a Pod.
+- cephfs  
+  We can use cephfs to mount a CephFS volume on containers of a Pod.
+- configMap  
+  We can use configMap to attach a decoupled storage object that encapsulates configuration data, scripts, and possibly entire filesystems, to containers of a Pod.
+- emptyDir  
+  An empty volume is created for the Pod as soon as it is scheduled on a worker node. The life of the volume is tightly coupled with the Pod. If the Pod dies, the content of emptyDir is deleted forever.
+- gcePersistentDisk  
+  With the gcePersistentDisk volume type, we can mount a Google Compute Engine (GCE) persistent disk into a Pod.
+- hostPath  
+  With the hostPath volume type, we can share a directory from the host with the containers of a Pod. If the Pod dies, the content of the volume is still available on the host.
+- nfs  
+  With the nfs volume type, we can mount an NFS share on containers of a Pod.
+- persistentVolumeClaim  
+  With the persistentVolumeClaim type we can attach a persistent volume to a Pod. We will cover this in the next section.
+- rbd  
+  We can use rbd to mount a Rados Block Device volume on containers of a Pod.
+- secret  
+  We can use a secret to attach storage objects that encapsulate encoded sensitive information such as passwords, keys, certificates, or tokens to containers in a Pod.
+- vsphereVolume  
+  We can use vsphereVolume to mount a vSphere VMDK volume on containers of a Pod.
+
+#### Persistent Volumes
+
+In a typical IT environment, the storage infrastructure is managed by the storage/system administrators, while the end-user receives precise instructions only on how to use the storage.
+
+In the containerized world, we would like to follow similar rules, but it becomes very challenging given the many volume types we have seen earlier. In Kubernetes, this problem is solved with the persistent volume subsystem, which provides APIs to manage and consume the storage. To manage the volume it uses the PersistentVolume (PV) resource type and to consume it, it uses the PersistentVolumeClaim (PVC) resource type.
+
+Persistent volumes can be provisioned statically or dynamically. In the example below, a Kubernetes Administrator has statically created several PVs.
+
+![PersistentVolumes](images/PersistentVolumes.png)
+
+For dynamic provisioning of PVs, Kubernetes uses the StorageClass resource, which contains predefined provisioners and parameters for PV creation. With PersistentVolumeClaim (PVC), a user sends the requests for dynamic PV creation, which gets wired to the StorageClass resource.
+
+#### Persistent Volumes Claim
+
+A PersistentVolumeClaim (PVC) is a request for storage by a user. Users request for PV resources based on size, access modes, and volume type. Once a suitable PV is found, it is bound to PVC.
+
+After a successful bind, the PVC can be used in a Pod, to allow the containers' access to the PV.
+
+![PersistentVolumesClaim](images/PVC.png)
+
+Once a user completed his tasks and the Pod is deleted, the PVC may be detached from the PV releasing it for possible future use. Keep in mind, however, that the PVC may be detached from the PV once all the Pods using the same PVC have completed their activities and have been deleted. Once released, the PV can be either deleted, retained, or recycled for future usage, all based on the reclaim policy the user has defined on the PV.
+
+#### Distributed Storage
+
+The Volume property of a Pod definition, or the PersistentVolume paired with a matching PersistentVolumeClaim seem to be quite simple to manage with the help of the Kubernetes supported storage plugins. This is true, when we have to manage only a handful of such resources. Once our application grows to hundreds, possibly thousands of distinct microservices, managing an equally large number of PersistentVolume and PersistentVolumeClaim objects could become very challenging. In addition, lots of very specific storage requirements will definitely not help to improve in any way the management process. 
+
+As storage platforms and services mature, users may be faced with increased complexity and the possibly of vendor lock-in which would tightly couple a cluster's storage resources with cloud storage services. As a result, it becomes nearly impossible to pick up the cluster and move it to another infrastructure, without adversely impacting applications, requiring manual reconfiguration of many definition manifests for PersistentVolume and PersistentVolumeClaim objects, StorageClass definitions, and possibly Pod definitions as well.
+
+Kubernetes best practices recommend that we should aim for decoupling as much as possible, that includes decoupling our applications from the underlying storage infrastructure. This can be achieved by introducing a new abstraction layer between the Kubernetes storage resource definitions and the storage infrastructure - storage interfaces that are not available as Kubernetes native storage plugins. Open source projects that implement such interfaces are Rook and Longhorn.
+
+![Rook](images/rookarchitecture.png)
+![Longhorn](images/longhorn.png)
+
+### Cloud Foundry Volume Service
+
+On Cloud Foundry, applications connect to other services via a service marketplace. Each service has a service broker, which encapsulates the logic for creating, managing, and binding services to applications.
+
+With volume services, the volume service broker allows Cloud Foundry applications to attach external storage.
+
+![VolumeService](images/cf-volume-service.png)
+
+With the volume bind command, the service broker issues a volume mount instruction which instructs the Diego scheduler to schedule the app instances on cells which have the appropriate volume driver. In the backend, the volume driver gets attached to the device. Cells then mount the device into the container and start the app instance.
+
+### Container Storage Interface (CSI)
+
+For a while, container orchestrators like Kubernetes, Mesos, Nomad, and Cloud Foundry have had their specific methods of managing external storage volumes. As a result, for storage vendors, it was difficult to manage different volume plugins for different orchestrators. Storage vendors and community members from different orchestrators have been working together to standardize the volume interface to avoid duplicate work. This is the aim of the Container Storage Interface (CSI), that the same volume plugin would work with different container orchestrators out of the box.
+
+Such interoperability may only be achieved through an industry standard to be implemented by all storage providers which are developing universal plugins expected to work with all container orchestrators. The role of CSI is to maintaining the CSI specification and the protobuf - a protocol buffer language- and platform-neutral, that serializes structured data. With the flexibility of various structure and stream types, data becomes smaller, faster, and simpler to manage.
+
+The goal of the CSI specification is to define APIs for dynamic provisioning, attaching, mounting, consumption, and snapshot management of storage volumes. In addition, it defines the plugin configuration steps to be taken by the container orchestrator together with deployment configuration options.
+
+## 11 - DevOps and CI/CD
