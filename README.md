@@ -662,7 +662,7 @@ Key benefits of using Alpine Linux are:
 
 ### Busybox
 
-BusyBox, the Swiss Army Knife of Embedded Linux, combines very small versions of several popular UNIX utilities into a single compact executable. While these utilities incorporate fewer options, they still support the expected functionality and behavior. Written with size-optimization and limited resources in mind, with a container image between 1 MB to 5 MB, BusyBox is able to pack a complete environment making it an ideal fit for small or embedded systems. In addition, its modular nature makes it very easy to customize. 
+BusyBox, the Swiss Army Knife of Embedded Linux, combines very small versions of several popular UNIX utilities into a single compact executable. While these utilities incorporate fewer options, they still support the expected functionality and behavior. Written with size-optimization and limited resources in mind, with a container image between 1 MB to 5 MB, BusyBox is able to pack a complete environment making it an ideal fit for small or embedded systems. In addition, its modular nature makes it very easy to customize.
 
 Although not an Operating System in itself, BusyBox was designed to run on Linux and to enhance a lightweight OS with tools needed to help developers troubleshoot and debug their containerized applications. BusyBox is licensed under the GNU General Public License, version 2 (GPLv2).
 
@@ -706,7 +706,7 @@ FCOS offers multiple installation methods:
 
 ### Flatcar Container Linux
 
-Flatcar Container Linux is a container-optimized OS, with a minimal image size including only the tools needed to run containers. Its name, "Flatcar", represents a flat and open railcar that is used in containers transportation. Flatcar's greatest strengths are its immutable filesystem and automated atomic updates. 
+Flatcar Container Linux is a container-optimized OS, with a minimal image size including only the tools needed to run containers. Its name, "Flatcar", represents a flat and open railcar that is used in containers transportation. Flatcar's greatest strengths are its immutable filesystem and automated atomic updates.
 
 Flatcar Container Linux is a drop-in replacement for Red Hat CoreOS Container Linux, being directly derived from CoreOS and enabling a seamless in-place migration. Users of CoreOS can effortlessly migrate to Flatcar Container Linux either by modifying a deployment to install Flatcar Container Linux, or by updating directly from Red Hat CoreOS Container Linux.
 
@@ -1931,7 +1931,7 @@ Once a user completed his tasks and the Pod is deleted, the PVC may be detached 
 
 #### Distributed Storage
 
-The Volume property of a Pod definition, or the PersistentVolume paired with a matching PersistentVolumeClaim seem to be quite simple to manage with the help of the Kubernetes supported storage plugins. This is true, when we have to manage only a handful of such resources. Once our application grows to hundreds, possibly thousands of distinct microservices, managing an equally large number of PersistentVolume and PersistentVolumeClaim objects could become very challenging. In addition, lots of very specific storage requirements will definitely not help to improve in any way the management process. 
+The Volume property of a Pod definition, or the PersistentVolume paired with a matching PersistentVolumeClaim seem to be quite simple to manage with the help of the Kubernetes supported storage plugins. This is true, when we have to manage only a handful of such resources. Once our application grows to hundreds, possibly thousands of distinct microservices, managing an equally large number of PersistentVolume and PersistentVolumeClaim objects could become very challenging. In addition, lots of very specific storage requirements will definitely not help to improve in any way the management process.
 
 As storage platforms and services mature, users may be faced with increased complexity and the possibly of vendor lock-in which would tightly couple a cluster's storage resources with cloud storage services. As a result, it becomes nearly impossible to pick up the cluster and move it to another infrastructure, without adversely impacting applications, requiring manual reconfiguration of many definition manifests for PersistentVolume and PersistentVolumeClaim objects, StorageClass definitions, and possibly Pod definitions as well.
 
@@ -1959,3 +1959,695 @@ Such interoperability may only be achieved through an industry standard to be im
 The goal of the CSI specification is to define APIs for dynamic provisioning, attaching, mounting, consumption, and snapshot management of storage volumes. In addition, it defines the plugin configuration steps to be taken by the container orchestrator together with deployment configuration options.
 
 ## 11 - DevOps and CI/CD
+
+Over the last decade or so, we gradually shifted from the Waterfall model to Agile software development, and developers started to deliver working software in smaller and more frequent increments. In this process, the IT operations (Ops) teams were unintentionally left behind, putting a lot of pressure on them due to high end-to-end deployment rates. By keeping the Ops teams in the loop from the very beginning of the development cycle, we can reduce this burn-out and can take advantage of their expertise in the continuous integration process.
+
+The collaborative work between Developers and Operations is referred to as DevOps. DevOps is more of a mindset, a way of thinking, versus a set of processes implemented in a specific way.
+
+DevOps practitioners are involved with various development workflows, such as Continuous Integration (CI), Continuous Delivery (CD), and Continuous Deployment (CD). The CI represents a flow of code merge, build, and automated testing operations performed frequently and quickly. The Continuous Delivery (CD) flow follows the CI and it automates the code deployment to a staging environment, expecting a manual deployment for the production release. The key difference between this CD and the Continuous Deployment (CD) is the production release method - manual for Continuous Delivery (CD) while automated for the Continuous Deployment (CD). The automation of the Deployment process means frequent smaller releases that trigger faster customer feedback allowing for faster fixes to smaller bugs.
+
+### Jenkins
+
+Jenkins Overview
+Jenkins is one of the most popular automation tools, a graduated project of the CD Foundation. It is an open source automation system written in Java that supports Continuous Integration (CI) and Continuous Deployment (CD).
+
+There are several offers of Jenkins as a Service, from different distributions to cloud-hosted solutions:
+
+- CloudBees, also one of the primary sponsors for the Jenkins open source project, offers a variety of Jenkins-based CI/CD products.
+- Servana, a managed Jenkins service provider, uses CloudBees Jenkins distribution hosted in Servana's own datacenters.
+- Jenkins can also be hosted on major cloud services providers, such as Amazon AWS, DigitalOcean, Google Cloud Platform, Kamatera, and Microsoft Azure.
+
+According to the Jenkins Documentation, Pipeline's features are:
+
+- Code: Pipelines are implemented in code and typically checked into source control, giving teams the ability to edit, review, and iterate upon their delivery pipeline.
+- Durable: Pipelines can survive both planned and unplanned restarts of your Jenkins master.
+- Pausable: Pipelines can optionally stop and wait for human input or approval before completing the jobs for which they were built.
+- Versatile: Pipelines support complex real-world CD requirements, including the ability to fork or join, loop, and work in parallel with each other.
+- Extensible: The Pipeline plugin supports custom extensions to its DSL (domain scripting language) and multiple options for integration with other plugins.
+
+The flowchart below illustrates a sample deployment using the Pipeline Plugin:
+
+![JenkinsPipeline](images/JenkinsPipeline.png)
+
+While the Pipeline's classic UI complexity challenged some users, Jenkins introduced the Blue Ocean, a UI designed to improve the user experience by simplifying the Pipeline build process. Recently, two alternative visualization plugins were made available, the Pipeline: Stage View and Pipeline: Graph View. The newer plugins aim to offer the same functionality and eventually replace the Blue Ocean UI. Blue Ocean and its successors introduced the following features:
+
+- Sophisticated visualization for a comprehensive display of the CD Pipeline status.
+- Pipeline editor that visually and intuitively guides the user through the Pipeline build process.
+- Personalization to cater to each user's role.
+- Pinpoint precision by highlighting areas where user's attention is required.
+- Native integration for branch and pull requests to maximize collaboration on GitHub and Bitbucket.
+
+The main benefits of Jenkins are that it is open source, has a large community, and is highly extensible. Jenkins can be integrated with a wide range of plugins, and it is easy to set up and configure. Jenkins is also highly scalable and can be used to automate tasks of any complexity.
+
+### Travis CI
+
+Travis CI is a hosted, distributed CI solution for projects hosted on GitHub, BitBucket, and more.
+
+To run the test with CI, first we have to link our GitHub account with Travis and select the project (repository) for which we want to run the test. In the project's repository, we have to create a `.travis.yml` file, which defines how our build should be executed step-by-step.
+
+A typical job build with Travis consists of two major phases:
+
+- install: to install any dependency or pre-requisite
+- script: to run the build script.
+
+We can also add other optional steps, including deployment. The following are build options that can be defined in a .travis.yml file. Steps marked with an asterisk (*) are optional.
+
+- `before_install`
+- `install`
+- `before_script`
+- `script`
+- `before_cache *`
+- `after_success or after_failure`
+- `before_deploy *`
+- `deploy *`
+- `after_deploy *`
+- `after_script`
+
+Travis CI supports various databases, like MYSQL, PostgreSQL, MariaDB, MongoDB, CouchDB, Redis, Cassandra, and Memcached.
+
+The build phase is supported by various isolation environments, such as Docker, LXD containers, Linux VMs, and various operating systems such as MacOS, Ubuntu Linux, Windows Server, and FreeBSD.
+
+Travis CI supports most languages, such as C, C++, C#, Visual Basic, Go, Java, Matlab, Perl, PHP, Python, Ruby, Rust, just to name a few.
+
+### Concourse CI
+
+Concourse is an open source CI/CD system, which was started by Alex Suraci and Christopher Brown in 2014. Later, Pivotal sponsored the project. It is written in the Go language.
+
+With Concourse, we run series of tasks to perform desired operations. For containerization it uses Docker and Docker-Compose, while the series of tasks together with resources allow us to build a job or pipeline. Following is a sample task file:
+
+```yaml
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: busybox
+
+run:
+  path: echo
+  args: ["Hello, world!"]
+```
+
+With the above configuration, we would be creating a Linux container using the `busybox` container image from Docker Hub, and inside that container, we would run the `echo hello world` program.
+
+Concourse is driven by the fly CLI and a web UI. We can use fly to login to our Concourse setup and to execute tasks, while the web UI helps to visualize jobs and resources in the form of graphs.
+
+### Cloud Native CI/CD
+
+So far, we have seen that containers are now playing a major role in an application's lifecycle, from packaging to deployment. Containers have brought Dev, QA, and Ops teams together, which led to a significant improvement in CI/CD. We can code our CI/CD pipeline and store it along with the source code as we've seen in the earlier sections.
+
+We have also seen various methods to run and manage containers at scale using container orchestrators. There are many options for orchestrators, but Kubernetes seems to be the preferred orchestration tool.
+
+In the Cloud Native approach, we design a package and run applications on top of our infrastructure (on-premises or public cloud) using operations tools like containers, container orchestration, and services like continuous integration, logging, monitoring, etc. Kubernetes integrated with several tools meets our requirements to run Cloud Native applications.
+
+#### DevOps vs GitOps vs DevSecOps
+
+DevOps is overall focusing on automating CI/CD processes such as code merges, application builds, testing, and delivery. At the same time the "as Code" concept became extremely popular, allowing users to define "everything as code", from infrastructure, to application configuration, rules and policy management. However, best practices require the use of a Git to manage the source code for "everything", therefore Git becoming an important component of daily Ops.
+
+Since so far we have been using Git as a single point of truth for code commits, now it extends to the entire system, Git becoming the single point of truth for infrastructure configuration code, application, source code, deployment configuration, or monitoring rules. And this is how GitOps was born, by combining DevOps concepts with tools for infrastructure configuration code management offered by Git.
+
+DevSecOps, however, is the practice of integrating security into all CI/CD processes, from development to production. The integration is assumed to be automated, following CI/CD automation models.
+
+#### Tools
+
+Kubernetes is the most popular and the de facto container orchestrator for on-premises and cloud containerized application deployments. As a result, the shape of CI/CD in general started to shift towards cloud native development, as the adoption of Kubernetes as a key component of CI/CD pipelines was inevitable. A large number of new development tools have been introduced supporting cloud native development best practices, or existing popular tools began to integrate Kubernetes in their existing CI/CD pipeline management tools. Below is a list of tools that help us with CI/CD, following both DevOps and GitOps best practices, that integrate well with Kubernetes for cloud native applications.
+
+- Helm  
+  Helm is a popular package manager for Kubernetes. Helm packages Kubernetes applications into Charts, with all the artifacts, objects, and dependencies an entire application needs in order to successfully be deployed in a Kubernetes cluster. Using Helm Charts, which are stored in repositories, we can share, install, upgrade, or rollback an application that was built to run on Kubernetes. Helm is a graduated project of the Cloud Native Computing Foundation (CNCF).
+- Skaffold  
+  Skaffold is a tool from Google that helps us build, push, and deploy code to the Kubernetes cluster. It supports Helm, and it also provides building blocks and describes customizations for a CI/CD pipeline.
+- Argo  
+  Argo is a cloud native family of tools aimed at workflow management on Kubernetes clusters. The Argo Workflows tool is responsible for orchestrating multi-step task sequences as CI/CD pipelines on Kubernetes, while also managing Kubernetes clusters, complemented by Argo CD to perform GitOps, and Argo Rollouts for advanced deployment strategies. Argo is a graduated project of the Cloud Native Computing Foundation (CNCF).
+- Flux  
+  Flux is a set of open source tools that enable GitOps and continuous deployment (CD) on Kubernetes. Flux integrates with Helm, GitHub, GitLab, Harbor, and it can be extended with components from the GitOps Toolkit for source control management, Kubernetes kustomization, Helm, notifications, and image management automation. Flux is a graduated project of the Cloud Native Computing Foundation (CNCF).
+- GitLab  
+  GitLab is a DevOps platform that incorporates continuous integration (CI), automated delivery pipelines, enables GitOps and DevSecOps. For GitOps it enforces version control of the infrastructure configuration code, it integrates with Terraform to allow for easy deployment from bare metal, VMs, containers, to the public cloud. GitLab enables DevSecOps with built-in security and compliance through automated vulnerability scans, static and dynamic application security testing, and implementing supply chain security.
+- JFrog Pipelines  
+  A highly optimized CI/CD tool that automates the end-to-end orchestration of software builds, testing, deployment. It uses containers to isolate releases, supporting both legacy and modern cloud native applications. JFrog Pipelines are offered as a free service with monthly limitations, or paid subscription for teams and enterprises.
+- CircleCI  
+  CircleCI is a fast, highly scalable, reliable and extensible CI/CD tool that builds pipelines to Kubernetes. It provides native Docker support and it integrates with Kubernetes services and tools such as GKE, Amazon EKS, AKS, Red Hat OpenShift, Kublr, Nirmata, and Helm. It uses orbs to package CircleCI configuration defining commands, executors and jobs. CircleCI is offered free with limitations on jobs and build times, or as a paid service for enterprises.
+- Jenkins X  
+  Jenkins X is a very popular tool for CI/CD that can be used on Kubernetes as well. But the Jenkins team built a new cloud-native CI/CD tool, Jenkins X, from the ground up. The new tool leverages Terraform for infrastructure management, Helm for GitOps, open source or cloud secret management services, and Tekton for cloud native pipeline orchestration. Collectively they help to deploy a CI/CD pipeline directly on Kubernetes, simplify and automate a full CI/CD pipeline. In addition, Jenkins X automates the preview of pull requests for fast feedback before changes are merged, and then it automates the environment management and the promotion of new application versions between different environments. Jenkins X is an incubating project while Tekton is a graduated project of CD Foundation.
+- Spinnaker  
+  Spinnaker is an open source multi-cloud continuous delivery platform, originally created by Netflix, for releasing software changes with high velocity. It supports all the major cloud providers like Amazon Web Services, Microsoft Azure, Google Cloud Platform and OpenStack and it integrates with Kubernetes natively. Spinnaker is an incubating project of the CD Foundation.
+
+## 12 - Configuration Management
+
+When we have numerous systems (both bare-metal and virtual) to manage in different environments like Development, QA and Production, we would prefer to automate the provisioning of such systems. At any point in time, we may want to have a consistent and desired state of systems and software installed on them. This leads to the concept of Infrastructure as Code, which means that the infrastructure resources are defined in a declarative fashion in configuration files that ultimately can be re-used to be able to provision consistently reproducible systems across environments.
+
+### Ansible
+
+Red Hat's Ansible is an easy-to-use, open source configuration management (CM) tool. It is an agentless tool that works through SSH. In addition, Ansible can automate infrastructure provisioning (on-premises or public cloud), application deployment, and orchestration.
+
+Due to its simplicity, Ansible quickly became one of the top in-demand CM tools in the DevOps world.
+
+One of Ansible's advantages is its agentless architecture. This ensures that maintenance tasks are restricted to a single management node, and not to every managed instance in the cluster. As a result, all updates to managed nodes are pushed via SSH, to lists of nodes that are managed through inventory files. To list the nodes which we want to manage in an inventory file, we must do the following:
+
+```text
+[webservers]
+www1.example.com
+www2.example.com
+
+[dbservers]
+db0.example.com
+db1.example.com
+```
+
+![Ansible](images/ansible-deployment.png)
+
+The nodes can be grouped together as shown in the picture above. Ansible also supports dynamic inventory files for cloud providers like AWS and OpenStack. The management node connects to these nodes with a password or it can do passwordless login, using SSH keys.
+
+Ansible ships with a default set of modules, like packaging, network, etc., which can be executed directly or via Playbooks. We can also create custom modules.
+
+Playbooks are Ansible’s configuration, deployment, and orchestration language.
+
+Below we provide an example of a playbook which performs multiple tasks based on roles:
+
+```yaml
+# This playbook deploys the whole application stack in this site.
+- name: apply common configuration to all nodes
+  hosts: all
+  remote_user: root
+
+  roles:
+    - common
+
+- name: configure and deploy the webservers and application code
+  hosts: webservers
+  remote_user: root
+
+  roles:
+    - web
+
+- name: deploy MySQL and configure the databases
+  hosts: dbservers
+  remote_user: root
+
+  roles:
+    - db
+```
+
+The sample tasks mentioned in the playbook are:
+
+```yaml
+# These tasks install http and the php modules.
+- name: Install http and php etc
+  yum: name={{ item }} state=present
+  with_items:
+   - httpd
+   - php
+   - php-mysql
+   - git
+   - libsemanage-python
+   - libselinux-python
+
+- name: insert iptables rule for httpd
+  lineinfile: dest=/etc/sysconfig/iptables create=yes state=present regexp="{{ httpd_port }}" insertafter="^:OUTPUT "
+              line="-A INPUT -p tcp --dport {{ httpd_port }} -j ACCEPT"
+  notify: restart iptables
+
+- name: http service state
+  service: name=httpd state=started enabled=yes
+```
+
+The Ansible management node connects to the nodes listed in the inventory file and runs the tasks included in the playbook. A management node can be installed on any Unix-based system like Linux or macOS. It can manage any node which supports SSH and Python.
+
+Ansible Galaxy is a free site for finding, downloading, and sharing community-developed Ansible roles.
+
+Ansible also has an enterprise product called Ansible Automation Platform, which introduces a UI interface, access control, and central management.
+
+### Puppet
+
+Puppet is an open source configuration management tool. It uses the agent/server model to configure the systems. The agent is referred to as the Puppet Agent and the server is referred to as the Puppet Server. Puppet also supports the agentless model to manage target systems.
+
+Besides Puppet, the company also has an enterprise product called Puppet Enterprise and provides services and training for this product as well.
+
+Puppet Agent needs to be installed on each system we want to manage/configure with Puppet. Can be installed in Windows, Linux and MacOs. Each agent is responsible for:
+
+- Connecting securely to the Puppet Server to pull updates and a series of instructions in a file referred to as the Catalog File.
+- Performing operations from the Catalog File to get to the desired state.
+- Sending back the status to the Puppet Server.
+
+Puppet Server can be installed only on Unix-based system. It is responsible for:
+
+- Compiling the Catalog File for hosts based on the system, configuration, manifest file, etc.
+- Sending the Catalog File to Agents when they query the Server.
+- Storing information about the entire environment, such as host information, metadata (such as authentication keys), etc.
+- Gathering reports from each Agent and then preparing the overall report.
+
+Puppet prepares a Catalog File based on the manifest file. A manifest file is created using the Puppet Code:
+
+```puppet
+user { 'student':
+  ensure     => present,
+  uid        => '1001',
+  gid        => '1001',
+  shell      => '/bin/bash',
+  home       => '/home/student'
+}
+```
+
+which defines and creates a user student with:
+
+- UID/GID as 1001
+- The login shell is set to `/bin/bash`
+- The home directory is set to `/home/student`
+
+A manifest file can have one or more sections of code, as we exemplified above, and each of these sections of code can have a signature like the following:
+
+```puppet
+resource_type { 'resource_name'
+  attribute => value
+  ...
+}
+```
+
+Puppet defines resources on a system as Type which can be file, user, package, service, etc. After processing the manifest file, the Puppet Server prepares the Catalog File based on the target platform.
+
+### Chef
+
+Chef uses the client/server model or the clientless model to perform the configuration management. The client is installed on each host which we want to manage and is referred to as Chef Client, while pulling updates from the server is referred to as Chef Server. Additionally, there is the Chef Workstation, which is used to:
+
+- Develop cookbooks and recipes.
+- Synchronize chef-repo with the version control system.
+- Run command line tools.
+- Configure policy, roles, etc.
+- Interact with nodes to perform a one-off configuration.
+
+![Chef](images/chef-overview.svg)
+
+A Chef Cookbook is the basic unit of configuration which defines a scenario and contains everything that supports the scenario. Two of its most important components are recipes and attributes.
+
+- Recipes are the most fundamental configuration element and contain the resources and the order in which they are applied.
+- Attributes are used to define the configuration settings for the resources.
+
+```ruby
+package 'apache2' do
+  action :install
+end
+```
+
+The above code installs the Apache2 package on the system. The Chef Client runs the recipe and applies the configuration to the system.
+
+### Salt
+
+Salt is an open source configuration management system built on top of a remote execution framework. It can be used in a client/server model or agentless model as well. In a client/server model the server pushes commands and configurations to all the clients in a parallel manner, which the clients run, returning back the status. In the agentless mode, the server connects with remote systems via SSH, however, this model offers limited functionality.
+
+VMware, Inc., the company that drives Salt development, also offers a Salt based enterprise product, the VMware Aria Automation.
+
+- Salt Minions are the agents that run on the target systems.
+![Salt](images/salt-minions.png)
+- Salt Master is the server that manages the Salt Minions.
+![Salt](images/salt-master.png)
+
+In a default setup, the Salt master and minions communicate over a high speed data bus, ZeroMQ, which requires an agent to be installed on each minion. Salt also supports an agentless setup using SSH for secure and encrypted communication between the master and the managed systems.
+
+Remote execution is based on Execution Modules and Returner Modules.
+
+Execution Modules provide basic functionality, like installing packages, managing files, managing containers, etc. All support modules are listed in the Salt documentation. We can also write custom modules.
+
+Returners allow for minions' responses to be saved on the master or other locations. We can use default Returners or write custom ones.
+
+All the information collected from minions is saved on the master. The collected information is referred to as Grains. Private information like cryptographic keys and other specific information about each minion which the master has, is referred to as Pillar Data. Pillar Data is shared between the master and the individual minion.
+
+By combining Grains and Pillar Data, the master can target specific minions to run commands on them. For example, we can query the hostname of all the nodes where the installed OS is Fedora 23.
+
+With the above tools and information in hand, the master can easily set up a minion with a specific state. This can also be referred to as Configuration Management. Salt has different State Modules to manage a state.
+
+## 13 - Build and Release Management
+
+With source code management tools like Git, we can easily version the code and retrieve the same bits we saved in the past. This saves a lot of time and helps developers automate most of the non-coding activities, like creating automated builds, running tests, etc. Extending the same analogy to infrastructure would allow us to create a reproducible deployment environment, which is referred to as Infrastructure as a Code.
+
+Infrastructure as a Code helps us create a near production-like environment for development, staging, etc. With some tooling around them, we can also create the same environments on different cloud providers.
+
+By combining Infrastructure as a Code with versioned software, we are guaranteed to have a reproducible build and release environment every time.
+
+### Terraform
+
+Terraform is a tool that allows us to define the infrastructure as code. This helps us deploy the same infrastructure on Virtual Machines, bare metal, or cloud. It helps us treat the infrastructure as software. The configuration files can be written in HashiCorp Configuration Language (HCL).
+
+HashiCorp, the organization that created Terraform, has introduced Terraform Cloud and Terraform Enterprise. Both offerings enable collaboration among professionals and teams.
+
+Physical machines, VMs, network switches, or containers are treated as resources, which are exposed by providers.
+
+A provider is responsible for understanding API interactions and exposing resources, which makes Terraform agnostic to the underlying platforms. A custom provider can be created through plugins.
+
+Terraform has providers in different stacks:
+
+- IaaS: AWS, DigitalOcean, GCP, OpenStack, Azure, Alibaba Cloud, etc.
+- PaaS: Heroku, Cloud Foundry, etc.
+- SaaS: DNSimple, etc.
+
+And has the following key features:
+
+- Infrastructure as Code: Infrastructure is described using a high-level configuration syntax. This allows a blueprint of your datacenter to be versioned and treated as you would any other code. Additionally, infrastructure can be shared and re-used.
+- Execution Plans: Terraform has a "planning" step where it generates an execution plan. The execution plan shows what Terraform will do when you call apply. This lets you avoid any surprises when Terraform manipulates infrastructure.
+- Resource Graph: Terraform builds a graph of all your resources, and parallelizes the creation and modification of any non-dependent resources. Because of this, Terraform builds infrastructure as efficiently as possible, and operators get insight into dependencies in their infrastructure.
+- Change Automation: Complex changesets can be applied to your infrastructure with minimal human interaction. With the previously mentioned execution plan and resource graph, you know exactly what Terraform will change and in what order, avoiding many possible human errors".
+
+### CloudFormation
+
+CloudFormation is a tool that allows us to define our infrastructure as code on Amazon AWS. This helps us treat our AWS infrastructure as software. The configuration files can be written in YAML or JSON format, while CloudFormation can also be used from a web console or from the command line.
+
+AWS CloudFormation provides an easy method to create and manage resources on AWS, adding order and predictability to the provisioning and updating processes. CloudFormation uses templates to describe the AWS resources and dependencies needed to run applications. It also allows for resources to be modified and updated while applying version control to the AWS infrastructure, similarly to software version control.
+
+CloudFormation presents the following features:
+
+- Extensibility  
+  It supports the modeling, provisioning, and management of third-party app resources through the AWS CloudFormation Registry, for monitoring, incident management, and version control.
+- Authoring with JSON or YAML  
+  To model the infrastructure and describe resources in a text file. The CloudFormation Designer helps with visual design when required.
+- Authoring with programming languages  
+  Through AWS Cloud Development Kit (AWS CDK) it supports TypeScript, Python, Java, and .Net to model cloud applications, integrated with CloudFormation for infrastructure provisioning.
+- Safety controls  
+  It provides Rollback Triggers to safely roll back to a prior state.
+- Preview environment changes  
+  To model the possible impact of the proposed changes to any of the existing resources.
+- Dependency management  
+  Determines actions sequence during stack operations.
+- Cross-account and cross-region management  
+  Allowed from a single template, called StackSet.
+
+### BOSH
+
+BOSH is an open source tool for release engineering, deployment, lifecycle management, and monitoring of distributed systems.
+
+BOSH was primarily developed to deploy the Cloud Foundry PaaS, but it can deploy other software as well (e.g., Hadoop). BOSH supports multiple Infrastructure as a Service (IaaS) providers. BOSH creates VMs on top of IaaS, configures them to suit the requirements, and then deploys the applications on them. Supported IaaS providers for BOSH are:
+
+- VMware vSphere
+- vCloud Director
+
+With the Cloud Provider Interface (CPI), BOSH supports additional IaaS providers such as:
+
+- Google Compute Engine
+- Amazon AWS
+- OpenStack
+
+The key concepts around BOSH are:
+
+- Stemcell  
+  A stemcell is a versioned, IaaS-specific, operating system image with some pre-installed utilities such as the BOSH Agent. Stemcells do not contain any application-specific code. The BOSH team is in charge of releasing stemcells, which are listed on the "Stemcells" web page.
+- Release  
+  A release is placed on top of a stemcell, and consists of a versioned collection of configuration properties, templates, scripts, source code, and source code to build and deploy software.
+- Deployment  
+  A deployment is a collection of VMs which are built from stemcells, populated with specific releases on top of them and having disks to keep persistent data.
+- BOSH Director  
+  The BOSH Director is the central orchestrator component of BOSH, which controls the VM creation and deployment. It also controls software and service lifecycle events. We need to upload stemcells, releases and deployment manifest files to the Director. The Director processes the manifest file and does the deployment.
+
+Let's see a sample deploy.
+
+```yaml
+name: zookeeper
+
+releases:
+- name: zookeeper
+  version: 0.0.5
+  url: ht‌tps://bosh.io/d/github.com/cppforlife/zookeeper-release?v=0.0.5
+  sha1: 65a07b7526f108b0863d76aada7fc29e2c9e2095
+
+stemcells:
+- alias: default
+  os: ubuntu-xenial
+  version: latest
+
+update:
+  canaries: 2
+  max_in_flight: 1
+  canary_watch_time: 5000-60000
+  update_watch_time: 5000-60000
+
+instance_groups:
+- name: zookeper
+  azs: [z1, z2, z3]
+  instances: 5
+  jobs:
+  - name: zookeeper
+    release: zookeeper
+    properties: {}
+  vm_type: default
+  stemcell: default
+  persistent_disk: 10240
+  networks:
+  - name: default
+
+- name: smoke-test
+  azs: [z1]
+  lifecycle: errand
+  instances: 1
+  jobs:
+  - name: smoke-tests
+    release: zookeeper
+    properties: {}
+  vm_type: default
+  stemcell: default
+  networks:
+  - name: default
+```
+
+## 14 - Key-Value Stores
+
+While building any distributed and dynamically-scalable environment, we need an endpoint which is a single point of truth. For example, we need such an endpoint if we want each node in a distributed environment to look up specific configuration values before performing an operation. For such cases, all the nodes can reach out to a central location and retrieve the value of a desired variable or key.
+
+As the name suggests, the key-value pair storage provides the functionality to store or retrieve the value of a key. Most of the key-value stores provide REST APIs to support operations like GET, PUT, and DELETE, which help with operations over HTTP.
+
+### etcd
+
+etcd is an open source distributed key-value pair storage, and it uses the Raft consensus algorithm for communication between instances of distributed multi-instance scenarios. It was started by CoreOS and it is written in Go. Currently, the etcd project is part of the Cloud Native Computing Foundation (CNCF) family of cloud-native technologies.
+
+etcd can be configured to run standalone or in a distributed cluster. In cluster mode, for High Availability, it can gracefully handle the leader election during network partitions and can tolerate machine failures, including the leader.
+
+It allows users or services to watch the value of a key, to then perform certain operations as a result of any change in that particular value.
+
+It is currently being used in many projects such as Kubernetes, rook, vulcand, CoreDNS, and OpenStack.
+
+Some of the cases in which etcd is used are:
+
+- Store connections, configuration, cluster bootstrapping keys, and other settings.
+- Service Discovery in conjunction with tools like skyDNS.
+- Metadata and configuration data for service discovery.
+- Container management.
+
+The main benefits are that it is simple, secure, and fast. It is also highly available and can be used in a distributed environment.
+
+### Consul KV
+
+Consul KV, of HashiCorp, is a distributed, highly-available system which can be used for service discovery and configuration.
+
+Other than providing a distributed key-value store, it also provides features like:
+
+- Service discovery in conjunction with DNS or HTTP
+- Health checks for services and nodes
+- Multi-datacenter support.
+
+While Consul KV can be configured on a single node, a multi-node configuration is recommended. Consul KV is built on top of Serf, which provides membership, failure detection, and event broadcast. Consul KV also uses the Raft consensus algorithm for leadership election and consistency.
+
+Some of the cases in which Consul KV is used are:
+
+- Store connections, configuration and other settings.
+- Service discovery and health checks in conjunction with DNS or HTTP.
+- Network infrastructure automation with dynamic load balancing while reducing downtime and outages.
+- Multi-platform secure service-to-service communication.
+
+### ZooKeeper
+
+ZooKeeper is a centralized service for maintaining configuration information, providing distributed synchronization together with group services for distributed applications. It is an open source project under The Apache Software Foundation.
+
+ZooKeeper aims to provide a simple interface to a centralized coordination service, that is also distributed and highly reliable. It implements consensus, group management, and presence protocols on behalf of applications.
+
+Some of the cases in which ZooKeeper is used are:
+
+- To implement node coordination in a clustered environment.
+- To manage cloud node memberships while coordinating distributed jobs.
+- As a backing store for distributed and scalable data structures.
+- Election of a High Availability leader.
+- As light-weight failover and load balancing manager.
+
+ZooKeeper is used in many projects like Hadoop, Kafka, and Solr.
+
+## 15 - Image Building
+
+In an immutable infrastructure environment we prefer to replace an existing service with a new one, to fix any problems/bugs or to perform an update.
+
+Whether we start a new service or replace an older service with a new one, we need the image from which the service can be started. These images should be created in an automated fashion. This is where the concept of Image Building comes into play.
+
+### Building Docker Images
+
+A custom container image can be created with Docker by starting a container from a base image and, after making any desired changes (e.g., installing software), the `docker commit` command can be used to save these changes to persistent storage, resulting in a new container image. This is not a scalable and efficient solution.
+
+Docker has a feature that allows it to read instructions from a text file in order to generate an image. Internally, it creates a container after each instruction and then commits it to persistent storage. The file with instructions is referred to as a Dockerfile. In order to build a container image from a Dockerfile the `docker build` command is run. Below we present a sample Dockerfile:
+
+```dockerfile
+FROM fedora
+RUN dnf -y update && dnf clean all
+RUN dnf -y install nginx && dnf clean all
+RUN echo "daemon off;" >> /etc/nginx/nginx.conf
+RUN echo "nginx on Fedora" > /usr/share/nginx/html/index.html
+
+EXPOSE 80
+
+CMD [ "/usr/sbin/nginx" ]
+```
+
+`FROM`, `RUN`, `EXPOSE`, and `CMD` are reserved instructions, and are followed by arguments.
+
+Typically, Dockerfiles start from a parent image or a base image, specified with the `FROM` instruction. A parent image is an image used as a reference, modified by subsequent Dockerfile instructions. Parent images can be built directly out of working machines, or with tools such as Debootstrap. A base image has `FROM` scratch in the Dockerfile.
+
+A multi-stage build is an advanced feature of Docker, very useful for optimizing the Dockerfiles and minimizing the size of a container image. Through a multi-stage build, we create a new Docker image in every stage. Every stage can copy files from images created either in earlier stages or from already available images.
+
+For example, in the first stage, we can copy the source code, compile it to create a binary, and then, in the second stage, we can copy just the binary to a resulting image. Before multi-stage builds, we would need to create multiple Dockerfiles to achieve similar results.
+
+Let's take a look at the following Dockerfile:
+
+```dockerfile
+# stage - 1
+FROM ubuntu AS buildstep
+RUN apt update && apt install -y build-essential gcc
+COPY hello.c /app/hello.c
+WORKDIR /app
+RUN gcc -o hello hello.c && chmod +x hello
+
+# stage - 2
+FROM ubuntu
+RUN mkdir -p /usr/src/app/
+WORKDIR /usr/src/app
+COPY --from=buildstep /app/hello ./hello
+COPY ./start.sh ./start.sh
+ENV INITSYSTEM=on
+CMD ["bash", "/usr/src/app/start.sh"]
+```
+
+### Building Container Images with Podman
+
+A custom container image can be created with Podman by starting a container from a base image and, after making the required changes (e.g., installing the software), we can use the `podman commit` command to save it to persistent storage, resulting in a new container image. This is not a scalable and efficient solution.
+
+Podman has a feature that allows it to read instructions from a text file and then generate the requested image. Internally, it creates a container after each instruction and then commits it to persistent storage. The file with instructions is referred to as a Containerfile or a Dockerfile, which makes Podman more flexible with the source it uses for the image build process. While the instructions file naming may be different, Containerfile vs Dockerfile, the instructions syntax is identical for both files. In order to build a container image from a Containerfile or Dockerfile, the `podman build` command is run. Below we present a sample Containerfile:
+
+```Dockerfile
+FROM fedora
+RUN dnf -y update && dnf clean all
+RUN dnf -y install nginx && dnf clean all
+RUN echo "daemon off;" >> /etc/nginx/nginx.conf
+RUN echo "nginx on Fedora" > /usr/share/nginx/html/index.html
+
+EXPOSE 80
+
+CMD [ "/usr/sbin/nginx" ]
+```
+
+`FROM`, `RUN`, `EXPOSE`, and `CMD` are reserved instructions, and are followed by arguments.
+
+Containerfiles start from a base image specified with the `FROM` instruction. A base image is an image used as a reference, modified by subsequent Containerfile instructions. Base images can be built directly out of working machines, or with tools such as Debootstrap.
+
+### Building Container Images with Buildah
+
+Buildah has a feature that allows it to read instructions from a text file and then generate the requested image. Internally, it creates a container after each instruction and then commits it to persistent storage. The file with instructions is referred to as a Containerfile or a Dockerfile, which also makes Buildah flexible with the source it uses for the image build process. While the instructions file naming may be different, Containerfile vs Dockerfile, the instructions syntax is identical for both files. In order to build a container image from a Containerfile or Dockerfile, the `buildah bud` (build-using-dockerfile) command is run.
+
+Buildah supports another method to build container images, by running a sequence of individual instructions that would otherwise be stored in a Containerfile or Dockerfile.
+
+Below we present a sequence of Buildah commands that build the same image as the Containerfile and Dockerfile samples earlier:
+
+```Dockerfile
+buildah from fedora
+buildah run containerID -- dnf -y update && dnf clean all
+buildah run containerID -- dnf -y install nginx && dnf clean all
+buildah run containerID -- sh -c 'echo "daemon off;" >> /etc/nginx/nginx.conf'
+buildah run containerID -- sh -c 'echo "nginx on Fedora" >
+/usr/share/nginx/html/index.html'
+
+buildah config --port 80 containerID
+
+buildah config --cmd '/usr/sbin/nginx' containerID
+```
+
+### Packer
+
+Packer from HashiCorp is an open source tool for creating virtual machine images from a configuration file for different platforms. Configuration files are written using HashiCorp Configuration Language (HCL).
+
+Below is a sample configuration file for two different cloud platforms, Amazon EC2 and Google Compute Engine:
+
+```json
+{
+  "variables": {
+    "aws_access_key": "abc",
+    "aws_secret_key": "xyz",
+    "atlas_token": "123"
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-west-2",
+    "source_ami": "ami-9abea4fb",
+    "instance_type": "t2.micro",
+    "ssh_username": "ubuntu",
+    "ami_name": "packer-example {{timestamp}}"
+  }, {
+  "type": "googlecompute",
+  "account_file": "user.json",
+  "project_id": "useapp",
+  "source_image": "ubuntu-1404-trusty-v20160114e",
+  "zone": "us-central1-a",
+  "image_name": "myimage"
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "inline": [
+      "sleep 30",
+      "#!/bin/bash",
+      "sudo apt-get -y update",
+      "sudo apt-get -y install apache2",
+      .....
+      .....
+    ]
+  }],
+  "post-processors": [{
+        "type": "atlas",
+        "only": ["amazon-ebs"],
+        "token": "{{user `atlas_token`}}",
+        "artifact": "user/stack",
+        "artifact_type": "amazon.image",
+        "metadata": {
+          "created_at": "{{timestamp}}"
+        }
+      }, {
+        "type": "atlas",
+        "only": ["googlecompute"],
+        "token": "{{user `atlas_token`}}",
+        "artifact": "user/stack",
+        "artifact_type": "googlecompute.image",
+        "metadata": {
+          "created_at": "{{timestamp}}"
+        }
+  }]
+}
+```
+
+There are several steps in the Packer build process:
+
+- Building the base image  
+  This is defined under the builders section of the configuration file. Packer supports the following platforms: Amazon EC2 (AMI), DigitalOcean, Docker, Google Compute Engine, Microsoft Azure, OpenStack, Parallels (PVM), QEMU, VirtualBox (OVF), and VMware (VMX). Other platforms can be added via plugins. In the example we provided, we have created machine images for Amazon EC2 and Google Compute Engine. Packer offers an advanced feature where it supports multiple machine images to be created from the same template file. It is called parallel builds, and it ensures "near-identical" machine images built for different environments.
+- Provision the base image for configuration  
+  Once we built a base machine image, we can then provision it, to further configure it and make changes like install software, etc. Packer supports different provisioners such as Shell, Ansible, Puppet, and Chef. In the example provided, we are using Shell as a provisioner.
+- Perform optional post-build operations  
+  Post-processors allow us to copy/move the resulted machine image to a central repository or create a Vagrant box.
+
+### Image Registries
+
+Once container images have been built, including other artifacts, packaging configuration and internalization data - it is good practice to store them in a safe place that is easily accessible. Easy access allows for uncomplicated future image retrieval, sharing and availability for components of a CI/CD pipeline.
+
+Container images and other types of artifacts are commonly stored in a registry. A registry is a repository or has the capability to store multiple repositories which provide means to segregate the registry into isolated projects dedicated to individual users, teams, organizations, etc.
+
+There are several registries that are in use today and open source tools that offer improved interfacing capabilities with registries:
+
+- ArtifactHub is an open source Cloud Native Computing Foundation (CNCF) sandbox project that can store Helm charts, Tekton pipelines, OPA policies, Falco rules, Krew Kubectl plugins, KEDA scalers, CoreDNS plugins, etc.
+- JFrog Artifactory is a universal artifact manager for Docker container images, Helm charts, OS images, App packages, App dependencies, etc.
+- Docker Hub is a container image registry for Docker.
+- Harbor is an open source Cloud Native Computing Foundation (CNCF) graduated project that can store container images for Kubernetes and Docker.
+- Quay is a registry service offered by Red Hat that integrates with GitHub and Bitbucket to manage container images for Podman, Docker, and Rkt.
+- Google Container Registry is a Google Cloud service to manage container images for Docker.
+- Amazon Elastic Container Registry is an AWS service to manage container images for Docker, Helm charts, OS images, and Kubernetes addons.
+- Azure Container Registry is a service offered by Microsoft Azure to manage container images for Docker and Helm charts.
+- Skopeo is an open source tool that allows users to interface with multiple registries, by allowing container images to be moves between registries like docker.io, quay.io, and private/local repositories.
+
+## 16 - Logging and Monitoring
+
