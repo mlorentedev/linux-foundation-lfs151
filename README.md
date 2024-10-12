@@ -2651,3 +2651,555 @@ There are several registries that are in use today and open source tools that of
 
 ## 16 - Logging and Monitoring
 
+When we experience problems in development or production, we resort to debugging, logging, and monitoring tools to find the root cause of those problems. Some of the tools we should be familiar with are:
+
+- strace
+- SAR (System Activity Reporter)
+- tcpdump
+- GDB (GNU Project Debugger)
+- syslog
+- Nagios
+- Zabbix.ç
+
+We can use the same tools on bare metal and VMs, but containers bring additional challenges:
+
+Containers are ephemeral, so, when they are deleted, all their metadata, including logs, gets deleted as well, unless we store it in some other, possibly persistent storage location.
+Containers do not have kernel space components.
+We want to keep a container's footprint as small as possible, but installing debugging and monitoring tools make that nearly impossible.
+Collecting per container statistics, debugging information individually, and then analyzing data from multiple containers is a tedious process.
+It would be beneficial to have external tools for logging and monitoring instead of collecting them directly from individual containers. This may be achieved because each container runs as a process on the host OS, which has complete control of that process. Once we have collected the data from all the containers running on a system or in a cluster, like Kubernetes or Swarm, we can run a logical mapping of all collected logs and gain a system/cluster-wide visibility, known as observability.
+
+Below are some of the tools which we can use for containerized applications:
+
+- Debugging: Docker CLI, Kubernetes CLI, Podman CLI, nerdctl CLI, crictl CLI, Sysdig using `inspect`.
+- Logging: Docker CLI, Docker Logging Driver, Kubernetes CLI, Podman CLI, Podman Logging Driver, nerdctl CLI, crictl CLI using `logs`.
+- Monitoring: Docker CLI, Kubernetes CLI, Podman CLI, nerdctl CLI, crictl CLI, Sysdig, cAdvisor, Prometheus, Datadog, New Relic using `stats`.
+
+### Sysdig
+
+Sysdig provides an on-cloud and on-premises platform for DevOps security for containers, Kubernetes, monitoring and forensics through DevSecOps. According to sysdig.com, sysdig is `strace + tcpdump + htop + iftop + lsof + awesome sauce`.
+
+`sysdig` saves low-level system information from a running Linux instance that can be filtered and further analyzed. `sysdig monitor` is a paid offering that provides full-stack monitoring and alerting in addition to the open source version, together with a dashboard and Prometheus compatibility. And `sysdig secure` is also a paid offering that can identify vulnerabilities, check compliance, block threats, and improved response time
+
+A Sysdig agent needs to be installed on all the nodes if we want to collect the information at a central location. In addition, a kernel component has to be installed in order to capture system calls and OS events.
+
+Following are some of the key features of Sysdig tools:
+
+- Sysdig tools have native support to many applications, infrastructure, and container technologies, including Docker, Kubernetes, Mesos, AWS, and Google Cloud Platform.
+- Paid offerings provide alerting, dashboard, and team management.
+- They offer a programmatic interface with every part of Sysdig Monitor.
+
+### cAdvisor
+
+cAdvisor (Container Advisor) is an open source tool to collect resource usage and performance characteristics for the host system and running containers. It collects, aggregates, processes, and exports information about running containers. As of October 2023, it has native support for Docker and should also support other container runtimes out of the box.
+
+We can enable the cAdvisor tool to run as a Docker container and start collecting statistics with the following command:
+
+```bash
+sudo docker run \
+  --volume=/:/rootfs:ro \
+  --volume=/var/run:/var/run:ro \
+  --volume=/sys:/sys:ro \
+  --volume=/var/lib/docker/:/var/lib/docker:ro \
+  --volume=/dev/disk/:/dev/disk:ro \
+  --publish=8080:8080 \
+  --detach=true \
+  --name=cadvisor \
+  --privileged \
+  –-device=/dev/kmsg \
+  gcr.io/cadvisor/cadvisor:latest
+```
+
+And then point the browser to `http://host_IP:8080` to get live statistics. cAdvisor exposes its raw and processed statistics via a versioned remote REST API. It also supports exporting statistics for InfluxDB. cAdvisor exposes container statistics as Prometheus metrics.
+
+### Elasticsearch
+
+Elasticsearch is the distributed search and analytics engine at the core of the Elastic Stack. It is responsible for data indexing, search, and analysis. Kibana is an interface that enables interactive data visualization while providing insights into the data.
+
+Elasticsearch provides real-time search and analytics for structured or unstructured text, numerical data, or geospatial data. It is optimized to efficiently store and index data in order to speed up the search process. Elasticsearch paired with Kibana is the desired open source solution for diverse use cases such as machine learning, security, and reporting.
+
+Key features and benefits of Elasticsearch are:
+
+- It is a distributed solution, that is scalable, highly available, supporting cross-cluster and cross-datacenter replication.
+- It offers a variety of management tools and APIs to allow control over data, users, cluster operations, snapshots and restores.
+- It secures both the access methods to data through encryption and the data itself.
+- It provides alerts when certain changes have been identified in the data.
+- It supports a variety of clients in addition to standard RESTful APIs and JSON, such as Java, Python, SQL, and PHP.
+- Its functionality can be extended through plugins.
+- It can be deployed in the private, public, or hybrid cloud.
+- It supports tools that allow for data to be ingested and enriched through analyzers, tokenizers, and filtering.
+- It supports a variety of data types, such as text, numbers, vectors, histograms, date & time series, structured and unstructured data.
+- It supports advanced searching mechanisms, analytics, aggregation, machine learning, and alerting.
+
+### Fluentd
+
+Fluentd is an open source data collector, which lets us unify the data collection and consumption for a better use and understanding of data.
+
+![Fluentd](images/fluentd.png)
+
+Fluentd tries to structure the data in JSON as much as possible. It supports more than 500 plugins to connect input sources to output sources, after performing filtering, buffering and routing. Fluentd is a member project of of the Cloud Native Computing Foundation (CNCF).
+
+![Fluentd Architecture](images/FluentdandDockerIntegrated.png)
+
+### Datadog
+
+Datadog provides monitoring and analytics with integrated security as a service for DevOps. Through its wide array of products, the Datadog platform can monitor the performance and security of the infrastructure, network devices, network performance, cloud workloads, databases, the entire continuous integration (CI) environment. Systems, applications, and services it connects to are:
+
+- Amazon EC2
+- Apache
+- Java
+- MySQL
+- CentOS
+
+An extensive list of more than 600 integrations can be found in the official documentation. We need to install an agent in the host system, which sends the data to the Datadog's server. Once the data is sent, we can:
+
+- Build an interactive dashboard.
+- Search and correlate matrices and events.
+- Share the matrices and events.
+- Receive alerts.
+
+The image below illustrates valuable information about containers running in a Kubernetes cluster:
+
+- The number of nodes in the cluster
+- The running and stopped containers
+- The most resource-consuming pods
+- The number of running pods per node
+- The number of running containers per node
+- Resource utilization per node.
+
+![Datadog](images/k8s-dash.jpeg)
+
+Key benefits of using Datadog are:
+
+- It enables DevSecOps through a full stack of automated security threat detection and incident response workflows.
+- It comes pre-integrated with well-known third-party applications.
+- It provides a seamless workflow, regardless of platform, location or language.
+- It configures information filtration to get only needed metrics.
+- It allows us to enable the system to send alerts or notifications when serious issues arise.
+- It offers tools for team collaboration.
+- It is scalable.
+
+### Prometheus
+
+Prometheus is an open source tool used for system monitoring and alerting. It was originally developed by SoundCloud and is now one of the graduated projects at Cloud Native Computing Foundation (CNCF).
+
+Prometheus is suitable for recording any purely numeric time-series data. It works well for both machine-centric monitoring like CPU, memory usage, and monitoring of highly dynamic service-oriented architectures. It is primarily written in Go.
+
+Key Prometheus features include:
+
+- It is very reliable.
+- It supports multi-dimensional data model with time series data identified by metric name and key/value pairs.
+- It supports a query language to effectively query the collected time series data.
+- It support metrics collection through pull- and push-based mechanism.
+- It can discover target endpoints via service discovery or static configuration.
+- It can connect with external tools like Grafana and Pagerduty for dashboarding and alerting.
+- It supports client libraries for programming language like Go, Java, and Python, to add instrumentation to their code.
+
+![Prometheus](images/PrometheusArchitecture.png)
+
+The Prometheus server is the primary component that scrapes and stores pull- and push-based metrics. Once the data is collected, we can query it using the Prometheus Web UI or export it using HAProxy, StatsD, or Graphite. The Alertmanager handles alerts.
+
+### Splunk
+
+Splunk includes a family of products aiming to deliver highly scalable and fast real-time insight into enterprise data. It allows for data aggregation and analysis, with unique investigative methods.
+
+Splunk can be deployed on-premises or in the public cloud, while also capable to scale across many data sources. It provides interactive dashboards for users to visualize data, and also to set up actions and alerts. Dashboards are highly customizable and support augmented reality together with virtual reality to enhance the level of experience even for the non-technical users.
+
+Key features and benefits of Splunk are:
+
+- It provides easy data aggregation and analysis.
+- It is reliable and can be deployed securely in the cloud as a highly scalable service.
+- It supports real-time data streaming while collecting, processing, and distributing the data.
+- It supports advanced features such as custom access control, performance acceleration, high availability, and clustering as part of the Enterprise and Cloud platforms.
+- It enables DevSecOps through automation and orchestration of security threat detection, weakness discovery, and countering workflows.
+
+### OpenTelemetry
+
+OpenTelemetry is a set of tools, APIs, and SDKs that can be used to enable observability. It can create, retrieve, and export metrics, logs, and traces to help with software’s performance and behavior analysis.
+
+![OpenTelemetry](images/OpenTelemetryArchitecture.png)
+
+The core architectural component of OpenTelemetry is a Collector. It is a vendor-agnostic single code base agent supporting telemetry data formats from Jaeger, Prometheus, Fluent Bit, etc.
+
+OpenTelemetry supports a variety of programming languages such as .NET, C++, Java, JavaScript, Go, Python, PHP, Ruby, Rust, etc.
+
+Key features and benefits of OpenTelemetry are:
+
+- It is open source and vendor-agnostic.
+- It supports many programming languages.
+- It supports many telemetry data formats from open source tools like Prometheus, Fluent Bit, and Jaeger.
+- It relies on a Collector agent that requires to be deployed on each host of the desired environment.
+- It provides end-to-end creation, collection, process and export of metrics, logs, and trace data.
+
+### Dynatrace
+
+Dynatrace offers an AI-powered unified platform for observability, automation, and security. It monitors on-premises infrastructure, hybrid and public clouds, microservices and containers. It automates DevOps and DevSecOps activities by optimizing the integration between AI and Kubernetes to secure cloud native pipelines.
+
+Dynatrace provides out-of-the-box integrated solutions for several cloud and Kubernetes environments through its Dynatrace OneAgent:
+
+- AWS - in conjunction with Keptn provides observability into EC2, ECS, Lambda, Fargate, EKS, ElastiCache, ElasticSearch, DynamoDB, VPC, EBS, S3, AWS Outposts, CloudWatch, etc.
+- Azure - intelligent monitoring and auto-discovery of cloud services App Service, Functions, HDinsight, Web Apps, Blockchain, AKS, Databases, etc.
+- GCP - automated full stack monitoring of GCE, GKE, Anthos, and other services with the help of Keptn.
+- Kubernetes - the OneAgent Operator deploys Dynatrace to all cluster nodes to enable real-time discovery and observability, from the infrastructure, environment, to nodes, pods, and containers and microservices.
+- OpenShift - the OneAgent Operator introduces CRI-O and Docker container monitoring at scale.
+- VMware Tanzu - in conjunction with Keptn provides real-time observability of VMware's Tanzu Application Services (TAS) and Tanzu Kubernetes Grid (TKG) microservices and containerized processes.
+
+Key features and benefits of Dynatrace are:
+
+- It automates cloud operations through the help of AI.
+- It enables cloud native DevOps continuous delivery (CD) pipelines.
+- It is optimized for dynamic containerized microservices and it natively supports the upstream Kubernetes and its distributions.
+- It is reliable and can be deployed securely in the public cloud, hybrid cloud, on premises, and edge for IoT monitoring.
+- It uses Keptn to implement GitOps.
+
+## 18 - Service Mesh
+
+Service mesh is a network communication infrastructure layer for a microservices-based application. When multiple microservices are communicating with each other, a service mesh allows us to decouple resilient communication patterns such as circuit breakers and timeouts from the application code.
+
+Service mesh is generally implemented using a sidecar proxy. A sidecar is a container that runs alongside the primary application and complements it with additional features like logging, monitoring, and traffic routing. In the service mesh architecture, the sidecar pattern implements inter-service communication, monitoring, or other features that can be decoupled and abstracted away from individual services.
+
+- Communication. It provides flexible, reliable, and fast communication between various service instances.
+- Circuit Breakers. It restricts traffic to unhealthy service instances.
+- Routing. It passes a REST request for /foo from the local service instance to which the service is connected.
+- Retries and Timeouts. It can automatically retry requests on certain failures and can time out requests after a specified period.
+- Service Discovery. It discovers healthy, available instances of services.
+- Observability. It monitors latency, traces traffic flow, and generates access logs.
+- Authentication and Authorization. It can authenticate and authorize incoming requests.
+- Transport Layer Security (TLS) Encryption. It can secure service-to-service communication using TLS.
+
+Similar to the software-defined networking explored earlier, a service mesh also features data and control planes.
+
+- Service Mesh Data Plane. It implements the features that we mentioned on the previous page. It touches every packet/request in the system.
+- Service Mesh Control Plane. It provides policy and configuration for the Data Plane. For example, by using the control plane, we can specify settings for load balancing, weighted load balancing, and circuit breakers.
+
+### Consul
+
+Consul by HashiCorp is an open source project aiming to provide a secure multi-cloud service networking through automated network configuration and service discovery.
+
+Consul's strength lies in its support to connect services running in multiple datacenters. It is highly available for fault tolerance and increased performance, while it supports thousands or tens of thousands of simultaneous client services.
+
+![Consul](images/ConsulArchitecture.png)
+
+Client services are capable of automatic discovery of servers, while a distributed agent and node failure detection supports scalability more than the traditional heartbeating schemes. Very low coupling between datacenters, together with failure detection, connection caching, and multiplexing ensures fast and reliable cross-datacenter requests.
+
+Consul forwards RPC requests between remote Consul servers when a request is made for a resource available in another datacenter. If the remote datacenter is not available, then the remote resources will not be available either. Data caching is also supported by Consul, like connect certificates or optional results, which help with local decisions making about incoming connection requests even if the connection between servers is disrupted or if the servers are temporarily unavailable.
+
+The following are key features and benefits of Consul:
+
+- It is an open source project.
+- It supports the Envoy proxy.
+- It supports communication between services deployed across peered clusters through gateway proxies.
+- It can be deployed on any runtime or infrastructure, including bare-metal, VMs, any cloud, and Kubernetes clusters.
+- It deploys easily on Kubernetes through Helm, and it is injected as a sidecar container in Kubernetes objects.
+- It integrates with CI/CD tools.
+- It provides dynamic load balancing, service discovery, health checking, and reduced downtimes.
+- It provides good monitoring using statistics, logging, and distributed tracing.
+- It provides mTLS communication encryption between resources.
+
+### Envoy
+
+Envoy is a Cloud Native Computing Foundation (CNCF) graduated project, which was originally built by Lyft. It is an open source project that provides an L7 proxy and communication bus for large, modern, service-oriented architectures.
+
+Envoy has an out-of-process architecture, which means it is not dependent on the application code. It runs alongside the application and communicates with the application on localhost. We referred to this earlier as a sidecar pattern.
+
+With the Envoy sidecar implementation, applications need not be aware of the network topology. Envoy can work with any language and can be managed independently.
+
+Envoy can be configured as service and edge proxy. In the service type of configuration, it is used as a communication bus for all traffic between microservices. With the edge type of configuration, it provides a single point of ingress to the external world.
+
+The following are key features and benefits of the Envoy proxy:
+
+- It is an open source project.
+- It makes the network transparent to the applications.
+- Due to its out-of-process architecture, it can be run alongside any language or runtime.
+- It has support for HTTP/2 and gRPC for both incoming and outgoing connections.
+- It provides all the features of service mesh that we mentioned earlier, like load balancing, service discovery, circuit breakers, etc.
+- It provides good monitoring using statistics, logging, and distributed tracing.
+- It can provide SSL communication.
+
+### Istio
+
+Istio is one of the most popular service mesh solutions. It is an open source platform, backed by companies like Google, IBM and Lyft.
+
+Istio is divided into the following two planes: data plane and control plane.
+
+- Istio Data Plane. It is composed of Envoy proxies that are deployed as sidecars alongside the application containers. These proxies intercept all incoming and outgoing traffic and enforce the policies set by the control plane.
+- Istio Control Plane. It is responsible for managing and configuring the Envoy proxies. It is composed of the following components:
+  - Pilot. It is responsible for configuring the Envoy proxies and for providing service discovery.
+  - Mixer. It is responsible for enforcing access control, usage policies, and collecting telemetry data.
+  - Citadel. It is responsible for managing the security of the service mesh.
+
+![Istio](images/IstioArchitecture.png)
+
+Key features and benefits of Istio are:
+
+- Traffic control to enforce fine-grained traffic control with rich routing rules and automatic load balancing for HTTP, gRPC, WebSocket, and TCP traffic.
+- Internal and External Gateway support for ingress and egress traffic management.
+- Network resiliency to set up retries, failovers, circuit breakers, and fault injection.
+- Security and authentication to enforce security policies and enforce access control and rate limiting defined through the configuration API.
+- Pluggable extensions model based on WebAssembly that allows for custom policy enforcement and telemetry generation for mesh traffic.
+
+### Kuma
+
+Kuma is a platform-agnostic, modern and universal open source control plane for Service Mesh. It can be easily setup on VMs, bare-metal, and on Kubernetes.
+
+Kuma is based on the Envoy proxy - a sidecar proxy designed for cloud-native applications, that supports monitoring, security, and reliability for microservice applications at scale. With Envoy used as a data plane, Kuma can handle any L4/L7 traffic to observe and route traffic between services.
+
+While Kuma can be used by novices, it also provides data plane configuration policies for more experienced Service Mesh users.
+
+Kuma includes the following two planes:
+
+- Control-Plane. Kuma is a control plane that creates and configures policies that manage services within the Service Mesh.
+- Data-Plane. Implemented on top of the Envoy proxy, runs as an instance together with every service to process incoming and outgoing requests.
+
+![Kuma](images/kuma-arch.png)
+
+Kuma is a universal control plane that can run on modern environments like Kubernetes and on more traditional VM instances. Such flexibility is achieved through two separate running modes.
+
+- Kubernetes Mode. When deployed on Kubernetes, Kuma stores its state and configuration directly on the Kubernetes API Server, which injects a proxy sidecar into desired Kubernetes Pods.
+- Universal Mode. Installed on a Linux-compatible system such as macOS, VMs, or bare metal, including containers built on Linux-based MicroOSes. In this mode, Kuma needs to store its state in a PostgreSQL database.
+
+Key features and benefits of Kuma are:
+
+- It is universal, Kubernetes-native, and platform-agnostic because it runs on bare-metal, VMs, and Kubernetes.
+- it is easy to use and automate.
+- It is simple to deploy on any supported platform.
+- It is built on top of the Envoy proxy, the most popular Service Mesh proxy.
+- It supports cluster or zone ingress and optional egress through dedicated proxies which act as traffic management gateways.
+
+### Linkerd
+
+Linkerd is an open source network proxy designed for Kubernetes, and it is one of the Cloud Native Computing Foundation (CNCF) member projects.
+
+It supports all features of the service meshes listed earlier. In addition, Linkerd can be installed per host or instance, as a replacement for the sidecar deployment in Kubernetes clusters.
+
+The Linkerd data plane is implemented by the Linkerd2-proxy, a micro-proxy designed to be lighter and less complex than the popular Envoy proxy. In contrast with other service mesh implementations, for simplicity, Linkerd does not have its own implementation to handle ingress traffic into the Kubernetes cluster. However, it supports several well known ingress controllers such as: Nginx, Traefik, Gloo, Contour, Kong, and HAProxy. However, it does support cross-cluster service communication through a simple gateway implementation.
+
+Key features and benefits of Linkerd include:
+
+- It is open source.
+- It can be run on different platforms like bare-metal, VMs, or containers hosting a Kubernetes cluster.
+- It is fast, scalable, and performant.
+- It implements its own transparent micro-proxy that runs alongside existing applications and integrates with the existing infrastructure.
+- It supports cross-cluster traffic management.
+- It integrates with most service discovery systems.
+
+### Traefik
+
+Traefik Mesh is a simple open source service mesh, from Traefik Labs. It is a simple and easy to configure service mesh that provides traffic visibility and management inside a Kubernetes cluster.
+
+Traefik Mesh improves cluster security through monitoring, logging, visibility, and access controls. Communication monitoring and tracing also help with traffic optimization and increased application performance. Its simplicity and ease of implementation allow administrators to spend their valuable time focusing on business applications.
+
+Traefik Mesh is able to reveal underutilized resources, or overloaded services, which helps with proper resources allocation.
+
+Being non-invasive by design, Traefik Mesh does not require any sidecar containers to be injected into Kubernetes pods. Instead, it routes through proxy endpoints, called mesh controllers, that run on each node as dedicated pods. Traefik Mesh operates in conjunction with its own ingress controller, the Traefik Proxy.
+
+![Traefik](images/traefik-architecture.png)
+
+Key features and benefits of using Traefik Mesh include:
+
+- It is open source and prevents vendor lock-in.
+- It is easy to install and non-invasive, as it does not require sidecar container injections.
+- It supports OpenTracing and metrics through Prometheus and Grafana.
+- It supports HTTP, HTTP/2, native gRPC, Websockets, and TCP connection routing.
+- It supports weighted round-robin load balancing and canary deployments.
+- It offers resiliency with automated retries and failover, together with circuit breaker mechanisms and rate limits.
+- It is secured by access control policies.
+
+### Tanzu Service Mesh
+
+Tanzu Service Mesh (briefly introduced as NSX Service Mesh) is an enterprise-class service mesh developed by VMware, built on top of VMware NSX. It aims to simplify the connectivity, security, and monitoring of applications on any runtime and on any cloud. In addition, as a modern distributed solution, it brings together application owners, DevOps, SRE, and SecOps.
+
+Tanzu Service Mesh consistently connects and secures applications running on all Kubernetes multi-clusters and multi-cloud environments. It can be installed on VMware Tanzu Kubernetes Grid clusters or any Kubernetes clusters, including managed Kubernetes services.
+
+![Tanzu](images/Tanzu-Service-Mesh.png)
+
+A unique characteristic of Tanzu Service Mesh is its ability to support cross-cluster and cross-cloud applications through Global Namespaces (GNS). A GNS further isolates an application from its Kubernetes cluster namespace and networking, which helps the application securely stretch across clusters and clouds. Global Namespaces introduce consistency in traffic routing, application resiliency, and security policies for applications across clouds.
+
+![Tanzu](images/TSM-Global-Namespace.png)
+
+Key features and benefits of Tanzu Service Mesh include:
+
+- It simplifies the service mesh lifecycle management through cross-platform portability.
+- It offers cross-cloud observability of communication between users, data, and services.
+- It offers a unified policy to manage multi-cluster mesh topologies through federation.
+- It normalizes the communication infrastructure across multi-clouds.
+- It utilizes global namespaces for portability and isolation.
+- It allows users to manage and configure failover and service behavior policies.
+- It implements the security and auditing of services running on multi-clouds.
+
+### Meshery
+
+Meshery is an open source, cloud native multi-cluster Kubernetes manager. It is a sandbox project of the Cloud Native Computing Foundation (CNCF).
+
+By design Meshery adds a Management plane on top of the existing Control planes and Data planes of typical service mesh implementations. The Management plane provides federation, backend system integration, expanded policy and governance, continuous delivery integration, workflow, chaos engineering, and application performance tuning. This enables operators, developers, and service owners to realize the full potential of a service mesh and it enhances in-network intelligence of the Data plane.
+
+With the help of adapters, Meshery supports a number of Service mesh implementations, such as Consul, Istio, Kuma, Linkerd, Traefik Mesh, and others. This multi-mesh management interface supports various aspects of each managed service mesh, such as lifecycle, workload, performance, configuration, patterns and practices, chaos and filters.
+
+Meshery is able to integrate with cloud native infrastructure, tools, and apps through a rich collection of over 200 integrations.
+
+Meshery is accessible through a friendly web UI that enables users to add clusters and service meshes through a connection wizard. The UI also allows users to manage lifecycle, configuration, performance and conformance of active service meshes under the management plane. The mesh map feature of the web UI is a design tool that uses a graphical approach to configure the desired meshed services.
+
+Meshery is deployed as containers on a Docker container host or on Kubernetes. It consists of the Meshery server that exposes the API to client requests. The server can either request information or invoke an Adapter operation as a result of a client request. Adapters are used to manage different infrastructure layers while the Operator is deployed on each managed Kubernetes cluster.
+
+![Meshery](images/MesheryArchitecture.png)
+
+Key features and benefits of Linkerd include:
+
+- It is open source.
+- It runs in containers on Docker hosts or Kubernetes.
+- It manages service mesh deployments.
+- It manages Kubernetes clusters, their infrastructure, and hosted applications and services with the help of over 200 integrations.
+- It provides an easy to use web UI that supports graphical design of cloud native artifacts.
+
+## 19 - Serverless computing
+
+Serverless computing or just serverless is a method of running applications without concerns about the provisioning of computer servers or any of the compute resources. However, behind the scenes, compute servers are most definitely involved. Serverless is similar to the wireless Internet where the wires exist, but they are not visible to end-users. Serverless computing requires compute resources to run applications, but the server management and the capacity planning decisions are completely abstracted from developers and users, because they are time consuming and counterproductive. Similar opinions have been voiced about application containers. They too, have become complex to build, maintain and run. Container orchestration aimed to simplify and automate how containers are run and managed at scale. Some adopters of container orchestration platforms attempted to compare the technology with serverless, calling it containerless. The similarity with serverless consists of the abstraction it offers developers and users when running containerized applications, while the container hosts are managed independently from the container orchestration tool.
+
+In serverless computing, we generally write applications/functions that focus and master one particular task. We then upload that application on the cloud provider, which gets invoked via different events, such as HTTP requests, webhooks, etc.
+
+The most common use case of serverless computing is to run any stateless applications like data processing or real-time stream processing. However, it can also augment a stateful application. Internet of Things and ChatBots are common use cases of serverless computing.
+
+There are few features and benefits of serverless computing:
+
+- No Server Management. When we use serverless offerings by cloud providers, no server management and capacity planning is required by us. It is all handled by the cloud services providers.
+- Cost-Effective. We only need to pay for a CPU time when our applications/functions are executed. There is no charge when code is not running. Also, there is no need to rent or purchase fixed quantities of servers.
+- Flexible Scaling. We don’t need to set up or tune autoscaling. Applications are automatically scaled up/down based on demand.
+- Automated High Availability and Fault Tolerance. High availability and fault tolerance are automatically included by the underlying cloud infrastructure providers. Developers are not required to specifically program for such features.
+
+On the other hand, there are some challenges and limitations of serverless computing:
+
+- Vendor Lock-In. Serverless features and implementation vary from vendor to vendor. So, the same application/function may not behave in the same way if you change the provider, and changing your provider can incur additional expenses.
+- Multitenancy and Security. You cannot be sure what other applications/functions run alongside yours, which raises multitenancy and security concerns.
+- Performance. If the application is not in use, the service provider can take it down, which will affect performance.
+- Resource Limits. Cloud providers set resource limits for our serverless applications/functions. Therefore, it is safer not to run high-performance or resource-intensive workloads using serverless solutions.
+- Monitoring and Debugging. It is more challenging to monitor serverless applications compared to applications running on traditional servers.
+
+### AWS Lambda
+
+AWS Lambda is the serverless event-driven service offered by Amazon Web Services Compute collection of products. AWS Lambda can be triggered in different ways, such as an HTTP request, a new document upload to S3, a scheduled job, an AWS Kinesis data stream, a notification from AWS Simple Notification Service, or a REST API call through the Amazon API Gateway.
+
+![AWS Lambda](images/AWS_Lambda.png)
+
+AWS managed to advance the efficiency and speed of AWS Lambda services through the Firecracker virtualization technology. An open source project, Firecracker relies on a virtual machine monitor (VMM) that creates microVMs leveraging the Linux Kernel Virtual Machine (KVM). Firecracker aims for a minimalist design, reduces the memory footprint and attack surface of a VM, while improving security, startup times, and hardware utilization.
+
+Key features and benefits of AWS Lambda are:
+
+- Integrating with other AWS services. It provides built-in logging and monitoring through Amazon CloudWatch.
+- Extending other AWS Services. It can provide custom logic to existing AWS resources such as S3 buckets, DynamoDB tables, or Kinesis streams. It can also use Lambda@Edge to run code in response to CloudFront events.
+- Building custom backend services. It can create new backend services for applications that can be triggered using the Lambda API.
+- Bringing users own code. It supports different programming languages such as Node.js, Java, C#, Go, and Python. This allows users to run and deploy their custom applications with AWS Lambda. In addition, the Runtime API allows for additional programming language support.
+- Connecting to relational databases. It uses the Amazon RDS Proxy to manage concurrent connections to relational databases such as MySQL and Aurora.
+- Connecting to shared filesystems. It supports secure reads and writes at any scale with the Elastic File System (EFS) for Lambda.
+- Integrating security. It allows for secure access to AWS services with integrated AWS IAM support. It supports VPC, SG, and NACL configurations, and it is HIPAA, ISO, and PCI compliant.
+
+### Gloogle Cloud Functions
+
+Google Cloud Functions is part of Google’s serverless services, which offers all the typical serverless benefits/features mentioned earlier. An application that runs with Cloud Functions can connect to other cloud services. Cloud Functions is essentially a Function-as-a-Service (FaaS) offering and it is complemented by two additional services, App Engine and Cloud Run:
+
+- App Engine allows users to build highly scalable applications on a fully managed serverless platform. It supports Node.js, Java, Ruby, C#, Go, Python, PHP, or other programming languages through custom runtime support. Scalability and flexibility are achieved by encapsulating the applications in Docker containers.
+- Cloud Run is a managed compute platform for fast and secure deployment and scaling of containerized applications. It supports Node.js, Java, Ruby, Go, and Python, and it improves the developer experience by integrating with services such as Cloud Code, Cloud Build, Cloud Monitoring, and Cloud Logging. Cloud Run also enables application portability by implementing the Knative open standard and supporting the Docker runtime.
+
+Google Cloud Functions can be written in Node.js, Python, Go, or Java and can be executed on Debian or Ubuntu systems on the Google Cloud Platform, simplifying and easing portability and local testing.
+
+![Google Cloud Functions](images/GoogleCloudFunctions.png)
+
+Key features and benefits of Google Cloud Functions are:
+
+- Integrating with other Google and AWS services. It connects well with other Google services such as GCP, Firebase, Google Assistant, Cloud Storage, Cloud Firestone, IoT Core, and Cloud Vision API. It also connects with Amazon Simple Notification Service (SNS).
+- Supports Node.js, Python, Go, and Java. It supports JavaScript (Node.js), Python, Go and Java programming languages to write serverless functions.
+
+### Azure Functions
+
+Azure Functions is part of Microsoft Azure’s serverless compute offering, together with Serverless Kubernetes and Serverless application environments.
+
+- Azure Functions offers an event-driven environment. It is available as a managed service in Azure and Azure Stack, but it also works on Kubernetes, Azure IoT Edge, on-premises, and other clouds.
+- Serverless Kubernetes allows users to create serverless, Kubernetes-based applications orchestrated with Azure Kubernetes Service (AKS) and AKS virtual nodes, based on the open-source Virtual Kubelet project.
+- Azure Container Apps allow containerized application deployments without infrastructure management.
+- Serverless application environments allow the running and scaling of web, mobile, and API applications on any platform of your choice through Azure App Service.
+
+Besides the pay-as-you-go model, it has another cost-based plan, the Azure App Service. If you are already using the Azure App Service, then you can add your functions on the same plan at no additional cost.
+
+Azure Functions can be written in C#, F#, Node.js, Python, PHP, Bash, or PowerShell. It can be triggered by HTTP requests, timers, queues, blobs, and events from Azure services.
+
+Key features and benefits of Azure Functions are:
+
+- Integration with other Azure services. It integrates well with other Azure services, like Azure Event Hubs and Azure Storage.
+- Bringing your own dependencies. It supports NuGet and NPM, so you can use custom libraries.
+- Integrated security. It provides OAuth security for HTTP-triggered functions with OAuth providers such as Azure Active Directory, Facebook, Google, Twitter, and Microsoft Account.
+- Open source. Azure Functions has an open source runtime.
+
+### Serverless computing and containers
+
+Container images became a prominent choice for packaging serverless applications, and container orchestrators became the preferred choice for executors.
+
+Let's see some projects using containers to run serverless applications:
+
+- Azure Container Instances. Azure Container Instances (ACI) is the service offered by Microsoft Azure, which allows users to run containers without managing servers. It provides hypervisor isolation for each container group to ensure containers run in isolation without sharing a kernel.
+- AWS Fargate. AWS Fargate is the service offered by Amazon Web Services, providing serverless compute for containers. It runs containers on Amazon Elastic Container Service (ECS) and Amazon Elastic Kubernetes Service (EKS) services. AWS managed to advance the efficiency and speed of AWS Fargate services through the Firecracker virtualization technology. An open source project, Firecracker relies on a virtual machine monitor (VMM) that creates microVMs leveraging the Linux Kernel Virtual Machine (KVM). Firecracker aims for a secure and minimal overhead execution of containers and serverless functions.
+- Fission. Fission is an open source project from Platform9, which provides a serverless Function-as-a-Service (FaaS) framework on Kubernetes.
+- Fn Project. Fn Project is an open source container-native serverless platform that runs on any platform local or cloud.
+- Virtual Kubelet. Virtual Kubelet connects Kubernetes to other APIs and masquerades as Kubernetes nodes. These other APIs include ACI, Fargate, IoT Edge. It is a Cloud Native Computing Foundation (CNCF) project.
+
+#### Knative
+
+Knative
+Knative is an open source platform based on Kubernetes that allows for the deployment and management of serverless applications. It is portable, running on any Kubernetes distribution without vendor lock-in. It is implemented in the form of controllers that get installed on the Kubernetes cluster and then registers custom API resources with the Kubernetes API Server. Knative is flexible and it supports plugins for logging, monitoring, networking, and even service mesh. In addition, it can be used with popular tools and frameworks such as Django, Ruby on Rails, and Spring.
+
+Although an open source project, there are commercial Knative products available as well, such as Google Cloud Run, Managed Knative for IBM Cloud Kubernetes Service, or OpenShift Serverless.
+
+Key features of Knative are:
+
+- Serving - It runs serverless applications in containers on Kubernetes. Knative automates the networking, ingress, scaling, application deployment rollout and revisions, logging, and monitoring.
+- Eventing - It allows applications to publish and subscribe to event streams such as Kafka or Google Cloud Pub/Sub.
+
+#### OpenFaaS
+
+OpenFaaS is an open source project that aims to simplify functions and code deployment directly to Kubernetes, OpenShift, or Docker Swarm. It runs on any cloud, both public and private. It leverages Docker as container runtime and it supports many programming languages such as Node.js, Python, C#, Django, or .NET.
+
+OpenFaaS allows both microservices and functions deployment in containers, aided by a functions store and a templating system which enable collaboration, sharing, and reusing of both functions and code. Once the code is packaged in a Docker container image, it becomes a highly scalable endpoint that can be monitored as well.
+
+OpenFaaS deployments can be complex, requiring multi-node clusters, or light-weight on a single-host. For complex production deployments, Kubernetes is the recommended container orchestrator for OpenFaaS, while for the single-host installation it uses faasd, a tool built with containerd and CNI.
+
+OpenFaaS provides the following features and benefits:
+
+- It is easy to use through a web portal or one-click install.
+- It supports functions written in any language for both Linux and Windows.
+- It support functions packaged in Docker/OCI image format.
+- It is portable as it runs on bare-metal, VM, or cloud.
+- It is Kubernetes, OpenShift, and Docker Swarm native.
+- It includes a YAML friendly CLI tool to build functions.
+- It auto-scales on demand.
+
+## 20 - Distributed tracing
+
+Organizations are adopting microservices for agility, easy deployment, scaling, etc. However, with a large number of services working together, sometimes it becomes difficult to pinpoint the root cause of latency issues or unexpected behaviors. To overcome such situations, we would need to instrument the behavior of each participating service in our microservices-based application. After collecting and combining the instrumented data from each participating service, we should be able to gain visibility of the entire system, known as Observability. Full observability is achieved through metrics, logs, and distributed tracing.
+
+There are various distributed tracing tools like Zipkin, Dapper, HTrace, and X-Trace, but they instrument applications using their own specific APIs, which are not compatible with each other. Due to this tight coupling, developers do not feel very comfortable with them. Enter OpenTelemetry, a successor of OpenTracing, which offers consistent, expressive, vendor-neutral APIs. OpenTelemetry is an open source incubating project of the Cloud Native Computing Foundation (CNCF). OpenTelemetry is the result of the merger between two earlier projects, OpenTracing and OpenCensus, both archived.
+
+### OpenTelemetry overview
+
+In general, a trace represents the details about a transaction, like how much time it took to call a specific function. A trace is referred by the directed acyclic graph (DAG) of spans. Each span can be referred to as a timed operation between contiguous segments of work. In distributed tracing, each service would contribute to its own span or set of spans. A parent can start other spans, either in serial or in parallel. A general tracing for microservices-based applications looks something like the following:
+
+![Tracing](images/tracing.png)
+
+However, it does not give us timing information and is difficult to understand when parallelism is involved. On the other hand, the following visualization presents service hierarchy, together with serial and parallel execution.
+
+![Tracing2](images/VisualizationofaTraceandComponentsSpans.png)
+
+OpenTelemetry provides a set of APIs, libraries, agents, and instrumentation to capture distributed traces and metrics. It is a vendor-neutral project that supports multiple languages and frameworks. It is designed to be extensible and customizable, and it can be used to instrument applications, libraries, and frameworks. OpenTelemetry is compatible with other observability tools like Prometheus, Jaeger, and Zipkin.
+
+### Jaeger overview
+
+Jaeger is an open source tracer which is compatible with the OpenTelemetry data model to support spans. Jaeger was open sourced by Uber Technologies and is now a graduated project of the Cloud Native Computing Foundation (CNCF). It can be used for the following:
+
+- Distributed content propagation
+- Distributed transaction monitoring
+- Root cause analysis
+- Service dependency analysis
+- Performance and latency optimization.
+
+![Jaeger](images/JaegerArchitectureNew.png)
+
+Jaeger currently (as of September 2023) supports Java, Go, Python, Node.js, C++, and C# programming languages. It uses language-specific Instrumentation to generate tracing data. Jaeger adopted the OpenTelemetry SDK to implement a replacement for its original Jaeger client and Jaeger agent component. The OpenTelemetry SDK exports and pushes the instrumented tracing data to the Jaeger collector.
+
+The collector supports Cassandra and ElasticSearch as storage backends. We can then query the collected data using Jaeger-UI.
